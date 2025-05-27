@@ -33,7 +33,8 @@ function getSectionComponent(section) {
     case "courses":
       return <CourseList />;
     case "faculty":
-      return <div>🧑‍🏫 <b>Faculty Directory</b> (manage teaching staff)</div>;
+      // Render the functional faculty directory
+      return <FacultyList />;
     case "rooms":
       return <RoomList />;
     case "import_export":
