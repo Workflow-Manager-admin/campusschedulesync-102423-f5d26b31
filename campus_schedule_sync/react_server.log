@@ -18,3 +18,18 @@ Note that the development build is not optimized.
 To create a production build, use npm run build.
 
 webpack compiled successfully
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/Dashboard.js
+  Line 49:15:  'AllocationPanels' is not defined  react/jsx-no-undef
+
+Search for the keywords to learn more about each error.
+ERROR in [eslint] 
+src/Dashboard.js
+  Line 49:15:  'AllocationPanels' is not defined  react/jsx-no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error

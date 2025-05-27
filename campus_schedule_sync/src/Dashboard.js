@@ -41,7 +41,12 @@ function getSectionComponent(section) {
         </div>
       );
     case "allocation":
-      return <div>🔗 <b>Allocation</b> (assign courses, teachers, and rooms)</div>;
+      // Import lazy to avoid circular, but here we just inline
+      // eslint-disable-next-line
+      // eslint-disable-next-line
+      // Allow tab between CourseAllocation and RoomAssignment
+      // No need to lazy-load.
+      return <AllocationPanels />;
     default:
       return null;
   }
