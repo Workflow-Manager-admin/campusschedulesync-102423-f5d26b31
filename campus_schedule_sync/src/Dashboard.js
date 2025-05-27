@@ -20,13 +20,14 @@ const SECTIONS = [
   { key: "allocation", label: "Allocation" },
 ];
 
+import CourseList from "./CourseList";
 // Stub panel for each main module; to be replaced with full feature modules
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
       return <div>📅 <b>Timetable View</b> (grid/calendar coming soon)</div>;
     case "courses":
-      return <div>📘 <b>Courses Module</b> (course list, CRUD coming soon)</div>;
+      return <CourseList />;
     case "faculty":
       return <div>🧑‍🏫 <b>Faculty Directory</b> (manage teaching staff)</div>;
     case "rooms":
