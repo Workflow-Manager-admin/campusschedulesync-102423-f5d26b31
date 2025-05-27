@@ -21,7 +21,6 @@ const SECTIONS = [
 ];
 
 import CourseList from "./CourseList";
-import CourseList from "./CourseList";
 // Stub panel for each main module; to be replaced with full feature modules
 function getSectionComponent(section) {
   switch (section) {
