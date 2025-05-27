@@ -53,7 +53,7 @@ function ImportExportPanel() {
         supabase.from("courses").select("*"),
         supabase.from("faculty").select("*"),
         supabase.from("rooms").select("*"),
-        supabase.from("timetable").select("*"),
+        supabase.from("timetable_entries").select("*"),
       ]);
       if (c.error) throw new Error("Courses fetch error: " + c.error.message);
       if (f.error) throw new Error("Faculty fetch error: " + f.error.message);
@@ -92,12 +92,20 @@ function ImportExportPanel() {
         if (error) throw new Error(error.message);
         setImportFeedback({ type: "success", message: `Imported ${items.length} rooms.` });
       } else if (type === "timetable") {
-        // Validate before insertion
+        // Update to use timetable_entries fields for validation/insertion
         const invalid = items.filter(e => (
-          !e.course_id || !e.faculty_id || !e.room_id || !e.day || !e.start_time || !e.end_time
+          !e.course_id || !e.faculty_id || !e.room_id || !e.day_of_week || !e.start_time
         ));
         if (invalid.length > 0) throw new Error("Some rows in the CSV were incomplete.");
-        const { error } = await supabase.from("timetable").insert(items);
+        // Only insert the valid columns
+        const records = items.map(e => ({
+          course_id: +e.course_id,
+          faculty_id: +e.faculty_id,
+          room_id: +e.room_id,
+          day_of_week: e.day_of_week,
+          start_time: e.start_time,
+        }));
+        const { error } = await supabase.from("timetable_entries").insert(records);
         if (error) throw new Error(error.message);
         setImportFeedback({ type: "success", message: `Imported ${items.length} timetable sessions.` });
       }
@@ -111,7 +119,7 @@ function ImportExportPanel() {
   // ------------------- Timetable Export as CSV/Excel/Image  -------------------------
   function handleTimetableExportCSV() {
     // Export timetable as CSV (flat, not grid format)
-    const headers = ["course_id", "faculty_id", "room_id", "day", "start_time", "end_time"];
+    const headers = ["course_id", "faculty_id", "room_id", "day_of_week", "start_time"];
     const csv = [headers.join(","),
       ...timetable.map(e =>
         headers.map(h => `"${e[h] ?? ""}"`).join(",")
