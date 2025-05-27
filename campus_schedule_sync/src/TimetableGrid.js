@@ -40,6 +40,14 @@ function TimetableGrid() {
   const [editingEntry, setEditingEntry] = useState(null); // session object or null
   const [notification, setNotification] = useState(null); // { type, message }
 
+  // Drag & Drop State / Conflict UI for timetable
+  const [conflictModal, setConflictModal] = useState({
+    open: false,
+    conflicts: [],
+    canOverride: false,
+    dndParams: null,   // {session, destCell}
+  });
+
   // Timetable config
   const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const TIME_START = "08:00";
@@ -68,6 +76,102 @@ function TimetableGrid() {
     }
     fetchLookups();
   }, [supabase]);
+
+  // useDragDrop connection
+  const dragDrop = useDragDrop({
+    sessions,
+    // onDrop provides new session and destCell {day,time}
+    onDrop: async (session, destCell) => {
+      // Proposed "move" to new cell (update day and start_time only; keep other)
+      const newSession = {
+        ...session,
+        day: destCell.day,
+        start_time: destCell.time,
+        // Preserve existing interval duration
+        end_time: addTime(destCell.time, sessionDuration(session)),
+      };
+      // Real-time conflict check
+      const { hasConflict, conflicts, canOverride } = checkSessionConflicts(
+        newSession,
+        sessions.filter((s) => s.id !== session.id),
+        { policies: { facultyMaxPerWeek: 12 } }
+      );
+      if (hasConflict) {
+        // Show modal before actually updating if conflict found
+        setConflictModal({
+          open: true,
+          conflicts,
+          canOverride,
+          dndParams: { session, destCell, newSession },
+        });
+        return { status: "conflict" };
+      } else {
+        // Direct commit
+        await updateSession(session.id, {
+          day: destCell.day,
+          start_time: destCell.time,
+          end_time: addTime(destCell.time, sessionDuration(session)),
+        });
+        refresh();
+        setNotification({ type: "success", message: "Session moved successfully." });
+        return { status: "success" };
+      }
+    },
+  });
+
+  // Util: parse hour/minute "HH:MM"
+  function parseTime(timeStr) {
+    const [h, m] = timeStr.split(":").map(Number);
+    return { h, m };
+  }
+  // Util: add duration in minutes to time string
+  function addTime(timeStr, minutes) {
+    let { h, m } = parseTime(timeStr);
+    m += minutes;
+    h += Math.floor(m / 60);
+    m = m % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  }
+  // Util: session duration (minutes)
+  function sessionDuration(s) {
+    if (!s) return TIME_INTERVAL_MINS;
+    const pStart = parseTime(s.start_time);
+    const pEnd = parseTime(s.end_time);
+    return (pEnd.h * 60 + pEnd.m) - (pStart.h * 60 + pStart.m);
+  }
+
+  // Handler: on admin override in modal
+  function handleOverrideProceed() {
+    if (
+      !conflictModal.dndParams ||
+      !conflictModal.dndParams.session ||
+      !conflictModal.dndParams.destCell
+    ) {
+      setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
+      return;
+    }
+    // Perform update session forcibly
+    updateSession(
+      conflictModal.dndParams.session.id,
+      {
+        day: conflictModal.dndParams.destCell.day,
+        start_time: conflictModal.dndParams.destCell.time,
+        end_time: addTime(
+          conflictModal.dndParams.destCell.time,
+          sessionDuration(conflictModal.dndParams.session)
+        ),
+      }
+    ).then(() => {
+      refresh();
+      setNotification({ type: "success", message: "Override: Session moved (policy violation overridden)." });
+    });
+    setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
+  }
+
+  // Handler: close/modal cancel
+  function handleModalClose() {
+    setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
+  }
 
   // Help: map ID to entity for display
   const courseMap = useMemo(() => Object.fromEntries(courses.map(c => [c.id, c])), [courses]);
