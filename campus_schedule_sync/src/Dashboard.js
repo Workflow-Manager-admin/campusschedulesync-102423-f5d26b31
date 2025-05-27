@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import CourseList from "./CourseList";
 
 /**
  * Dashboard container: hosts all major app panels (Timetable, Courses, Faculty, Rooms, Import/Export, Allocation).
@@ -20,7 +21,6 @@ const SECTIONS = [
   { key: "allocation", label: "Allocation" },
 ];
 
-import CourseList from "./CourseList";
 // Stub panel for each main module; to be replaced with full feature modules
 function getSectionComponent(section) {
   switch (section) {
