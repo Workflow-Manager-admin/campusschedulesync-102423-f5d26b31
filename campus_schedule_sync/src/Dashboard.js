@@ -27,10 +27,12 @@ const SECTIONS = [
 
 // Stub panel for each main module; to be replaced with full feature modules
 
+import TimetableGrid from "./TimetableGrid"; // Add import for TimetableGrid
+
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
-      return <div>📅 <b>Timetable View</b> (grid/calendar coming soon)</div>;
+      return <TimetableGrid />; // Replace placeholder with TimetableGrid
     case "courses":
       return <CourseList />;
     case "faculty":
