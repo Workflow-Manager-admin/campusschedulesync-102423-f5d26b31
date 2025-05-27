@@ -16,18 +16,18 @@ INSERT INTO faculty (id, name, department, email, faculty_code) VALUES
   (11, 'Prof. Lara Singh', 'Economics', 'lara.singh@campus.edu', 'FAC011');
 
 -- ===== ROOMS =====
-INSERT INTO rooms (id, name, building, capacity) VALUES
-  (1, 'A101', 'Main Building', 40),
-  (2, 'B202', 'Science Block', 35),
-  (3, 'C303', 'Engineering Wing', 60),
-  (4, 'D404', 'Mathematics Hall', 25),
-  (5, 'Lab01', 'Lab Complex', 28),
-  (6, 'A102', 'Main Building', 40),
-  (7, 'H201', 'Humanities', 30),
-  (8, 'E505', 'Innovation Center', 50),
-  (9, 'G301', 'Library Annex', 22),
-  (10, 'ArtRoom', 'Arts Block', 20),
-  (11, 'ChemLab', 'Science Block', 30);
+INSERT INTO rooms (id, name, capacity) VALUES
+  (1, 'A101', 40),
+  (2, 'B202', 35),
+  (3, 'C303', 60),
+  (4, 'D404', 25),
+  (5, 'Lab01', 28),
+  (6, 'A102', 40),
+  (7, 'H201', 30),
+  (8, 'E505', 50),
+  (9, 'G301', 22),
+  (10, 'ArtRoom', 20),
+  (11, 'ChemLab', 30);
 
 -- ===== COURSES =====
 INSERT INTO courses (id, code, name, department, faculty_id, room_id) VALUES
