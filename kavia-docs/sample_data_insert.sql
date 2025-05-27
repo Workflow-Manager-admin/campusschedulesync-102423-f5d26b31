@@ -46,20 +46,21 @@ INSERT INTO courses (id, code, name, department) VALUES
   (11, 'ECON101', 'Principles of Economics', 'Economics');
 
 -- ===== TIMETABLE_ENTRIES =====
--- Example structure: (id, course_id, faculty_id, room_id, day_of_week, start_time, end_time)
-INSERT INTO timetable_entries (id, course_id, faculty_id, room_id, day_of_week, start_time, end_time) VALUES
-  (1, 1, 1, 1, 'Monday', '09:00', '10:30'),   -- CS101 in A101 
-  (2, 1, 1, 1, 'Wednesday', '09:00', '10:30'), -- CS101 in A101 
-  (3, 2, 2, 3, 'Tuesday', '13:00', '14:30'),  -- ME201 in Engineering Wing
-  (4, 6, 6, 3, 'Friday', '15:00', '16:30'),   -- CE210 in Engineering Wing
-  (5, 3, 3, 2, 'Thursday', '10:00', '11:30'), -- PHYS110 in Science Block
-  (6, 5, 5, 11, 'Wednesday', '11:00', '12:30'), -- CHEM130 in ChemLab
-  (7, 8, 8, 7, 'Monday', '15:00', '16:30'),   -- BIO101 in Humanities
-  (8, 4, 4, 4, 'Tuesday', '09:00', '10:00'),  -- MATH120 in Mathematics Hall
-  (9, 7, 7, 8, 'Thursday', '15:00', '16:30'), -- EE220 in Innovation Center
-  (10, 10, 10, 9, 'Friday', '10:30', '12:00'), -- PHIL140 in Library Annex
-  (11, 9, 9, 7, 'Wednesday', '12:00', '13:30'), -- HIST150 in Humanities
-  (12, 11, 11, 6, 'Friday', '14:00', '15:30');  -- ECON101 in Main Building
+-- Structure: (id, course_id, faculty_id, room_id, scheduled_date, start_time, end_time, week, recurrence_pattern, status, notes)
+INSERT INTO timetable_entries (id, course_id, faculty_id, room_id, scheduled_date, start_time, end_time, week, recurrence_pattern)
+VALUES
+  (1, 1, 1, 1, '2024-01-08', '09:00', '10:30', 1, 'WEEKLY'),   -- CS101 in A101 Monday
+  (2, 1, 1, 1, '2024-01-10', '09:00', '10:30', 1, 'WEEKLY'),   -- CS101 in A101 Wednesday
+  (3, 2, 2, 3, '2024-01-09', '13:00', '14:30', 1, 'WEEKLY'),   -- ME201 in Engineering Wing Tuesday
+  (4, 6, 6, 3, '2024-01-12', '15:00', '16:30', 1, 'WEEKLY'),   -- CE210 in Engineering Wing Friday
+  (5, 3, 3, 2, '2024-01-11', '10:00', '11:30', 1, 'WEEKLY'),   -- PHYS110 in Science Block Thursday
+  (6, 5, 5, 11, '2024-01-10', '11:00', '12:30', 1, 'WEEKLY'),  -- CHEM130 in ChemLab Wednesday
+  (7, 8, 8, 7, '2024-01-08', '15:00', '16:30', 1, 'WEEKLY'),   -- BIO101 in Humanities Monday
+  (8, 4, 4, 4, '2024-01-09', '09:00', '10:00', 1, 'WEEKLY'),   -- MATH120 in Mathematics Hall Tuesday
+  (9, 7, 7, 8, '2024-01-11', '15:00', '16:30', 1, 'WEEKLY'),   -- EE220 in Innovation Center Thursday
+  (10, 10, 10, 9, '2024-01-12', '10:30', '12:00', 1, 'WEEKLY'),-- PHIL140 in Library Annex Friday
+  (11, 9, 9, 7, '2024-01-10', '12:00', '13:30', 1, 'WEEKLY'),  -- HIST150 in Humanities Wednesday
+  (12, 11, 11, 6, '2024-01-12', '14:00', '15:30', 1, 'WEEKLY');-- ECON101 in Main Building Friday
 
 -- All faculty_id, course_id, and room_id refer to valid, existing rows above.
--- Adjust datatypes, field names, and fields as per your real schema if needed.
+-- Columns/fields align with timetable_entries definition in supabase_schema.sql
