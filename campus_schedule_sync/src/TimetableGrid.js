@@ -171,63 +171,192 @@ export default function TimetableGrid() {
     fetchAll();
   }
 
-  // Render grid as table
+  // Render grid as table with drag-and-drop support for unscheduled courses
   function renderTable() {
     // Structure: cols = days, rows = times
+
     return (
-      <div className="tt-gridwrap">
-        <table className="tt-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 74 }}></th>
-              {weekdays.map((d) => (
-                <th key={d.key}>{d.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {timeSlots.map((slot, rowIdx) => (
-              <tr key={slot}>
-                <td style={{ fontWeight: 600 }}>{slot}</td>
-                {weekdays.map((day) => (
-                  <td key={day.key} className="tt-cell">
-                    {/* Render all blocks at this slot+day */}
-                    {(timetable.filter(
-                      (entry) =>
-                        entry.day_of_week === day.key &&
-                        entry.start_time === slot
-                    )).map((entry) => (
-                      <TimetableBlock
-                        key={entry.id}
-                        entry={entry}
-                        onClick={openEditModal}
-                      />
-                    ))}
-                    <div style={{ marginTop: 2 }}>
-                      <button
-                        className="btn btn-small"
+      <div>
+        {/* DnD block for unscheduled courses */}
+        <DragDropContext
+          onDragEnd={async (result) => {
+            // If not dropped on a valid cell, do nothing
+            if (!result.destination) return;
+            const { droppableId, index } = result.destination;
+            const match = droppableId.match(/^ttcell-(.+)-(.+)$/);
+            if (!match) return;
+            const [_, day, slot] = match;
+
+            // Scheduling a course (trigger Supabase insert)
+            const course = unscheduledCourses[result.source.index];
+            // UI expects faculty and room to be selected; for demo, leave null or pick first(??)
+            // Here, faculty and room will be prompted by modal/form in real app, but for
+            // demo, try to assign the first available if exists
+            const defaultFacultyId = faculty.length > 0 ? faculty[0].id : null;
+            const defaultRoomId = rooms.length > 0 ? rooms[0].id : null;
+            // If no faculty or room, do nothing
+            if (!defaultFacultyId || !defaultRoomId) {
+              alert("Please add faculty and rooms before scheduling!");
+              return;
+            }
+            // Insert to timetable_entries via Supabase
+            await handleFormSubmit({
+              course_id: course.id,
+              faculty_id: defaultFacultyId,
+              room_id: defaultRoomId,
+              day_of_week: day,
+              start_time: slot,
+              id: null, // insert
+            });
+            // After insertion, the fetchAll() in handleFormSubmit will refresh local timetable/courses
+          }}
+        >
+          {/* Render unscheduled courses as draggable cards */}
+          <Droppable droppableId="unscheduledCourses" direction="horizontal">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 8,
+                  marginBottom: 16,
+                  minHeight: 64,
+                  background: snapshot.isDraggingOver
+                    ? "#e8ffe3"
+                    : "var(--background, #f9fcfa)",
+                  border: "1.5px dashed #a8e5c2",
+                  borderRadius: 7,
+                  padding: 6,
+                }}
+              >
+                {unscheduledCourses.length === 0 && (
+                  <span style={{ color: "#888", fontStyle: "italic" }}>
+                    All courses scheduled!
+                  </span>
+                )}
+                {unscheduledCourses.map((course, idx) => (
+                  <Draggable
+                    key={course.id}
+                    draggableId={`course-${course.id}`}
+                    index={idx}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        className="unscheduled-course-card"
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
                         style={{
-                          fontSize: 11,
-                          padding: "0 6px",
-                          lineHeight: "16px",
-                          background: "#208b48",
-                          color: "#fff",
-                          letterSpacing: "0.06em",
-                          borderRadius: 4,
+                          userSelect: "none",
+                          ...provided.draggableProps.style,
+                          padding: "8px 12px",
+                          borderRadius: 5,
+                          background: snapshot.isDragging
+                            ? "#e87a41"
+                            : "#f6faf7",
+                          color: "#242c22",
+                          border: "1px solid #e8e7e3",
+                          minWidth: 120,
+                          boxShadow: snapshot.isDragging
+                            ? "0 2px 8px #e6af82"
+                            : "0 1.5px 4px #eaeaea",
+                          fontWeight: 500,
+                          fontSize: 15,
+                          cursor: "grab",
+                          transition: "background 0.14s",
                         }}
-                        aria-label={`Add session for ${day.label} ${slot}`}
-                        onClick={() => openCreateModal(day.key, slot)}
-                        tabIndex={0}
                       >
-                        +
-                      </button>
-                    </div>
-                  </td>
+                        <div>
+                          <b>{course.course_code}</b>
+                        </div>
+                        <div style={{ fontSize: 12, opacity: 0.7 }}>
+                          {course.name}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          <div className="tt-gridwrap">
+            <table className="tt-grid">
+              <thead>
+                <tr>
+                  <th style={{ width: 74 }}></th>
+                  {weekdays.map((d) => (
+                    <th key={d.key}>{d.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {timeSlots.map((slot, rowIdx) => (
+                  <tr key={slot}>
+                    <td style={{ fontWeight: 600 }}>{slot}</td>
+                    {weekdays.map((day) => (
+                      <Droppable
+                        key={day.key}
+                        droppableId={`ttcell-${day.key}-${slot}`}
+                      >
+                        {(provided, snapshot) => (
+                          <td
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="tt-cell"
+                            style={{
+                              background: snapshot.isDraggingOver
+                                ? "#cbeedf"
+                                : undefined,
+                              transition: "background 0.15s",
+                            }}
+                          >
+                            {(timetable
+                              .filter(
+                                (entry) =>
+                                  entry.day_of_week === day.key &&
+                                  entry.start_time === slot
+                              )
+                            ).map((entry) => (
+                              <TimetableBlock
+                                key={entry.id}
+                                entry={entry}
+                                onClick={openEditModal}
+                              />
+                            ))}
+                            {/* Drop button remains for manual creation */}
+                            <div style={{ marginTop: 2 }}>
+                              <button
+                                className="btn btn-small"
+                                style={{
+                                  fontSize: 11,
+                                  padding: "0 6px",
+                                  lineHeight: "16px",
+                                  background: "#208b48",
+                                  color: "#fff",
+                                  letterSpacing: "0.06em",
+                                  borderRadius: 4,
+                                }}
+                                aria-label={`Add session for ${day.label} ${slot}`}
+                                onClick={() => openCreateModal(day.key, slot)}
+                                tabIndex={0}
+                              >
+                                +
+                              </button>
+                            </div>
+                            {provided.placeholder}
+                          </td>
+                        )}
+                      </Droppable>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DragDropContext>
       </div>
     );
   }
