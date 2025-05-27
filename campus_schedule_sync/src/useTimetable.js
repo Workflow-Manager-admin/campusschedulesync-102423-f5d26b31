@@ -7,8 +7,8 @@ import { useSupabase } from "./SupabaseProvider";
  * 
  * CRUD for session entries. Keeps local state in sync with DB.
  * 
- * Table 'timetable' assumed structure:
- * - id, course_id, faculty_id, room_id, day, start_time, end_time
+ * Table 'timetable_entries' structure:
+ * - id, course_id, faculty_id, room_id, day_of_week, start_time
  * 
  * @returns {object} - { sessions, loading, error, addSession, updateSession, deleteSession, refresh }
  */
@@ -19,14 +19,14 @@ export function useTimetable() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch all timetable sessions from Supabase
+  // Fetch all timetable entries from Supabase
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     setError("");
     const { data, error } = await supabase
-      .from("timetable")
+      .from("timetable_entries")
       .select("*")
-      .order("day", { ascending: true })
+      .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) {
       setError("Failed to fetch timetable: " + error.message);
@@ -48,16 +48,23 @@ export function useTimetable() {
   const addSession = async (entry) => {
     setLoading(true);
     setError("");
+    // Only allow official fields
+    const entryToInsert = {
+      course_id: entry.course_id,
+      faculty_id: entry.faculty_id,
+      room_id: entry.room_id,
+      day_of_week: entry.day_of_week,
+      start_time: entry.start_time,
+    };
     const { data, error } = await supabase
-      .from("timetable")
-      .insert([entry])
+      .from("timetable_entries")
+      .insert([entryToInsert])
       .select();
     setLoading(false);
     if (error) {
       setError("Failed to create session: " + error.message);
       return false;
     }
-    // Append new session to state
     setSessions((prev) => [...prev, ...(data || [])]);
     return true;
   };
@@ -67,9 +74,17 @@ export function useTimetable() {
   const updateSession = async (id, updates) => {
     setLoading(true);
     setError("");
+    // Only allow official fields
+    const updatesToApply = {
+      course_id: updates.course_id,
+      faculty_id: updates.faculty_id,
+      room_id: updates.room_id,
+      day_of_week: updates.day_of_week,
+      start_time: updates.start_time,
+    };
     const { data, error } = await supabase
-      .from("timetable")
-      .update(updates)
+      .from("timetable_entries")
+      .update(updatesToApply)
       .eq("id", id)
       .select();
     setLoading(false);
@@ -78,7 +93,7 @@ export function useTimetable() {
       return false;
     }
     setSessions((prev) =>
-      prev.map((s) => (s.id === id ? (data && data[0] ? data[0] : { ...s, ...updates }) : s))
+      prev.map((s) => (s.id === id ? (data && data[0] ? data[0] : { ...s, ...updatesToApply }) : s))
     );
     return true;
   };
@@ -88,7 +103,7 @@ export function useTimetable() {
   const deleteSession = async (id) => {
     setLoading(true);
     setError("");
-    const { error } = await supabase.from("timetable").delete().eq("id", id);
+    const { error } = await supabase.from("timetable_entries").delete().eq("id", id);
     setLoading(false);
     if (error) {
       setError("Failed to delete session: " + error.message);
