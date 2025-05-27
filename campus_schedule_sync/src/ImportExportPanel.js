@@ -200,12 +200,42 @@ function ImportExportPanel() {
     }
   }
 
+  // Ref for ARIA live status region for accessibility
+  const liveRegionPanelRef = React.useRef();
+
   // ----------------- Render UI Sections ----------------
   return (
     <div>
       <h2 className="title" style={{ marginTop: 0, marginBottom: 16 }}>
         Import / Export Center
       </h2>
+      {/* ARIA live region for all status, errors, loads */}
+      <div
+        ref={liveRegionPanelRef}
+        tabIndex={-1}
+        aria-live={
+          importFeedback?.type === "error"
+            ? "assertive"
+            : importFeedback?.type === "success"
+            ? "polite"
+            : loading
+              ? "polite"
+              : "polite"
+        }
+        aria-atomic="true"
+        style={{
+          position: "absolute",
+          width: "1px",
+          height: "1px",
+          left: "-9999px",
+          overflow: "hidden"
+        }}
+      >
+        {loading && "Loading or importing..."}
+        {importFeedback && importFeedback.message}
+        {importPreview &&
+          `Preview: ${String(importPreview.items?.length)} items. Press Confirm Import to proceed.`}
+      </div>
       <div style={{
         display: "flex", flexDirection: "column", gap: 28
       }}>
@@ -221,6 +251,10 @@ function ImportExportPanel() {
                 type: "info",
                 message: `Preview loaded: ${data.length} courses. Confirm to commit.`
               });
+              // Move focus to ARIA region for accessible preview notification
+              setTimeout(() => {
+                if (liveRegionPanelRef.current) liveRegionPanelRef.current.focus();
+              }, 150);
             }}
           />
         </section>
@@ -236,6 +270,9 @@ function ImportExportPanel() {
                 type: "info",
                 message: `Preview loaded: ${data.length} faculty. Confirm to commit.`
               });
+              setTimeout(() => {
+                if (liveRegionPanelRef.current) liveRegionPanelRef.current.focus();
+              }, 150);
             }}
           />
         </section>
@@ -251,6 +288,9 @@ function ImportExportPanel() {
                 type: "info",
                 message: `Preview loaded: ${data.length} rooms. Confirm to commit.`
               });
+              setTimeout(() => {
+                if (liveRegionPanelRef.current) liveRegionPanelRef.current.focus();
+              }, 150);
             }}
           />
         </section>
@@ -284,12 +324,14 @@ function ImportExportPanel() {
               accept=".csv,text/csv"
               style={{ display: "none" }}
               id="tt-import-input"
+              disabled={loading}
               onChange={handleTimetableFileImport}
               data-testid="tt-import-file"
             />
             <button
               className="btn"
               type="button"
+              disabled={loading}
               onClick={() => document.getElementById("tt-import-input")?.click()}
             >
               Import
@@ -301,6 +343,7 @@ function ImportExportPanel() {
       {/* Preview/commit bar for all tables */}
       {importPreview && (
         <section
+          aria-label="Bulk Import Preview"
           style={{
             margin: "30px 0",
             background: "#fffbe8",
@@ -312,25 +355,33 @@ function ImportExportPanel() {
           <b>Import Preview:</b> {String(importPreview.items?.length)} items.
           {importPreview.type === "courses" && (
             <button className="btn" style={{ marginLeft: 14 }} disabled={loading}
-              onClick={() => { handleBulkImport("courses", importPreview.items); setImportPreview(null); }}>
+              onClick={() => { handleBulkImport("courses", importPreview.items); setImportPreview(null); }}
+              aria-label="Confirm courses import"
+            >
               Confirm Import
             </button>
           )}
           {importPreview.type === "faculty" && (
             <button className="btn" style={{ marginLeft: 14 }} disabled={loading}
-              onClick={() => { handleBulkImport("faculty", importPreview.items); setImportPreview(null); }}>
+              onClick={() => { handleBulkImport("faculty", importPreview.items); setImportPreview(null); }}
+              aria-label="Confirm faculty import"
+            >
               Confirm Import
             </button>
           )}
           {importPreview.type === "rooms" && (
             <button className="btn" style={{ marginLeft: 14 }} disabled={loading}
-              onClick={() => { handleBulkImport("rooms", importPreview.items); setImportPreview(null); }}>
+              onClick={() => { handleBulkImport("rooms", importPreview.items); setImportPreview(null); }}
+              aria-label="Confirm rooms import"
+            >
               Confirm Import
             </button>
           )}
           {importPreview.type === "timetable" && (
             <button className="btn" style={{ marginLeft: 14 }} disabled={loading}
-              onClick={handleConfirmTimetableImport}>
+              onClick={handleConfirmTimetableImport}
+              aria-label="Confirm timetable import"
+            >
               Confirm Import
             </button>
           )}
@@ -343,6 +394,7 @@ function ImportExportPanel() {
               fontWeight: 600,
             }}
             disabled={loading}
+            aria-label="Cancel import preview"
             onClick={() => { setImportPreview(null); setImportFeedback(null); }}
           >Cancel</button>
         </section>
@@ -366,7 +418,7 @@ function ImportExportPanel() {
           marginTop: 28,
           fontWeight: 500,
           color: "#999"
-        }}>
+        }} aria-live="polite">
           Loading or importing...
         </div>
       )}
