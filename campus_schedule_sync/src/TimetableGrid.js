@@ -3,6 +3,9 @@ import useTimetable from "./useTimetable";
 import TimetableEntryForm from "./TimetableEntryForm";
 import { useSupabase } from "./SupabaseProvider";
 import Notification from "./Notification";
+import useDragDrop from "./useDragDrop";
+import { checkSessionConflicts, explainConflicts } from "./conflictDetector";
+import ConflictModal from "./ConflictModal";
 
 /**
  * PUBLIC_INTERFACE
