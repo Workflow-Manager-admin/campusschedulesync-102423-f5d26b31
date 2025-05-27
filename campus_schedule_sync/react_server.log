@@ -2,9 +2,9 @@
 > react-kavia@0.1.0 start
 > react-scripts start
 
-(node:3614) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:4015) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:3614) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:4015) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 Starting the development server...
 
 Compiled successfully!
@@ -17,97 +17,4 @@ You can now view react-kavia in the browser.
 Note that the development build is not optimized.
 To create a production build, use npm run build.
 
-webpack compiled successfully
-Compiling...
-Failed to compile.
-
-[eslint] 
-src/Dashboard.js
-  Line 49:15:  'AllocationPanels' is not defined  react/jsx-no-undef
-
-Search for the keywords to learn more about each error.
-ERROR in [eslint] 
-src/Dashboard.js
-  Line 49:15:  'AllocationPanels' is not defined  react/jsx-no-undef
-
-Search for the keywords to learn more about each error.
-
-webpack compiled with 1 error
-Compiling...
-Failed to compile.
-
-[eslint] 
-src/Dashboard.js
-  Line 55:1:  Import in body of module; reorder to top  import/first
-  Line 56:1:  Import in body of module; reorder to top  import/first
-
-Search for the keywords to learn more about each error.
-ERROR in [eslint] 
-src/Dashboard.js
-  Line 55:1:  Import in body of module; reorder to top  import/first
-  Line 56:1:  Import in body of module; reorder to top  import/first
-
-Search for the keywords to learn more about each error.
-
-webpack compiled with 1 error
-Compiling...
-Failed to compile.
-
-[eslint] 
-src/Dashboard.js
-Syntax error: Identifier 'CourseAllocation' has already been declared. (57:7) (57:7)
-ERROR in ./src/Dashboard.js
-Module build failed (from ./node_modules/babel-loader/lib/index.js):
-SyntaxError: /home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/src/Dashboard.js: Identifier 'CourseAllocation' has already been declared. (57:7)
-
-  55 | }
-  56 |
-> 57 | import CourseAllocation from "./CourseAllocation";
-     |        ^
-  58 | import RoomAssignment from "./RoomAssignment";
-  59 |
-  60 | // Tabbed allocation panel for allocation section
-    at constructor (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:360:19)
-    at FlowParserMixin.raise (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:3327:19)
-    at FlowScopeHandler.checkRedeclarationInScope (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:1555:19)
-    at FlowScopeHandler.declareName (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:1521:12)
-    at FlowScopeHandler.declareName (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:1622:11)
-    at FlowParserMixin.declareNameFromIdentifier (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:7476:16)
-    at FlowParserMixin.checkIdentifier (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:7472:12)
-    at FlowParserMixin.checkLVal (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:7413:12)
-    at FlowParserMixin.finishImportSpecifier (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:13898:10)
-    at FlowParserMixin.parseImportSpecifierLocal (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:5605:31)
-    at FlowParserMixin.maybeParseDefaultImportSpecifier (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:14001:12)
-    at FlowParserMixin.parseImportSpecifiersAndAfter (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:13872:29)
-    at FlowParserMixin.parseImport (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:13868:17)
-    at FlowParserMixin.parseStatementContent (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12514:27)
-    at FlowParserMixin.parseStatementLike (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12406:17)
-    at FlowParserMixin.parseStatementLike (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:5140:24)
-    at FlowParserMixin.parseModuleItem (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12383:17)
-    at FlowParserMixin.parseBlockOrModuleBlockBody (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12960:36)
-    at FlowParserMixin.parseBlockBody (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12953:10)
-    at FlowParserMixin.parseProgram (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12280:10)
-    at FlowParserMixin.parseTopLevel (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:12270:25)
-    at FlowParserMixin.parseTopLevel (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:5909:28)
-    at FlowParserMixin.parse (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:14120:10)
-    at parse (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/parser/lib/index.js:14154:38)
-    at parser (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/core/lib/parser/index.js:41:34)
-    at parser.next (<anonymous>)
-    at normalizeFile (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
-    at normalizeFile.next (<anonymous>)
-    at run (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/core/lib/transformation/index.js:22:50)
-    at run.next (<anonymous>)
-    at transform (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/@babel/core/lib/transform.js:22:33)
-    at transform.next (<anonymous>)
-    at step (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/gensync/index.js:261:32)
-    at /home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/gensync/index.js:273:13
-    at async.call.result.err.err (/home/kavia/workspace/code-generation/campusschedulesync-102423-f5d26b31/campus_schedule_sync/node_modules/gensync/index.js:223:11)
-
-ERROR in [eslint] 
-src/Dashboard.js
-  Line 57:7:  Parsing error: Identifier 'CourseAllocation' has already been declared. (57:7)
-
-webpack compiled with 2 errors
-Compiling...
-Compiled successfully!
 webpack compiled successfully
