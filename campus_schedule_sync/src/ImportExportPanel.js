@@ -165,12 +165,10 @@ function ImportExportPanel() {
   function handleTimetableFileImport(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const text = event.target.result;
+    readSpreadsheetFile(file, (rows, meta) => {
       try {
-        const rows = parseCSV(text);
-        if (!rows.length || rows[0].length < 6) throw new Error("Invalid header/columns.");
+        if (!rows || !rows.length || rows[0].length < 6)
+          throw new Error("Invalid header/columns.");
         const header = rows[0].map(h => h.trim().toLowerCase());
         if (header.slice(0, 6).join(",") !== TIMETABLE_TEMPLATE_HEADER.join(",").toLowerCase()) {
           throw new Error(`Header must be: ${TIMETABLE_TEMPLATE_HEADER.join(", ")}`);
@@ -192,8 +190,7 @@ function ImportExportPanel() {
       } catch (err) {
         setImportFeedback({ type: "error", message: err.message });
       }
-    };
-    reader.readAsText(file);
+    }, true);
   }
 
   function handleConfirmTimetableImport() {
