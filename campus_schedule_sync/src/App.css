@@ -213,3 +213,44 @@ body {
   color: #111;
   opacity: 1;
 }
+
+/* Accessibility: visually hidden / screen-reader only utility */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Accessibility: high-contrast keyboard focus ring utility */
+.focus-visible,
+:focus-visible {
+  outline: 2px solid #1d8348 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2.5px #b0fccb;
+}
+
+/* Spinner/Loader for async feedback */
+.spinner,
+.loading-spinner {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  border: 3px solid #e1eedd;
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-green);
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
