@@ -31,18 +31,19 @@ VALUES
   ('RM011', 'ChemLab', 'lab', 30);
 
 -- ===== COURSES =====
-INSERT INTO courses (id, code, name, department, faculty_id, room_id) VALUES
-  (1, 'CS101', 'Intro to Computer Science', 'Computer Science', 1, 1),
-  (2, 'ME201', 'Thermodynamics', 'Mechanical Engineering', 2, 3),
-  (3, 'PHYS110', 'Classical Physics', 'Physics', 3, 2),
-  (4, 'MATH120', 'Calculus I', 'Mathematics', 4, 4),
-  (5, 'CHEM130', 'Organic Chemistry', 'Chemistry', 5, 11),
-  (6, 'CE210', 'Structural Analysis', 'Civil Engineering', 6, 3),
-  (7, 'EE220', 'Circuit Theory', 'Electrical Engineering', 7, 8),
-  (8, 'BIO101', 'General Biology', 'Biology', 8, 7),
-  (9, 'HIST150', 'World History', 'History', 9, 7),
-  (10, 'PHIL140', 'Introduction to Philosophy', 'Philosophy', 10, 9),
-  (11, 'ECON101', 'Principles of Economics', 'Economics', 11, 6);
+-- Removed faculty_id and room_id columns to match table schema.
+INSERT INTO courses (id, code, name, department) VALUES
+  (1, 'CS101', 'Intro to Computer Science', 'Computer Science'),
+  (2, 'ME201', 'Thermodynamics', 'Mechanical Engineering'),
+  (3, 'PHYS110', 'Classical Physics', 'Physics'),
+  (4, 'MATH120', 'Calculus I', 'Mathematics'),
+  (5, 'CHEM130', 'Organic Chemistry', 'Chemistry'),
+  (6, 'CE210', 'Structural Analysis', 'Civil Engineering'),
+  (7, 'EE220', 'Circuit Theory', 'Electrical Engineering'),
+  (8, 'BIO101', 'General Biology', 'Biology'),
+  (9, 'HIST150', 'World History', 'History'),
+  (10, 'PHIL140', 'Introduction to Philosophy', 'Philosophy'),
+  (11, 'ECON101', 'Principles of Economics', 'Economics');
 
 -- ===== TIMETABLE_ENTRIES =====
 -- Example structure: (id, course_id, faculty_id, room_id, day_of_week, start_time, end_time)
