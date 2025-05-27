@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import Navbar from "./Navbar";
 import Notification, { NotificationRoot } from "./Notification";
+import Dashboard from "./Dashboard";
 
 /**
  * App component: main layout for CampusScheduleSync.
@@ -11,25 +12,20 @@ import Notification, { NotificationRoot } from "./Notification";
 function App() {
   // Demo notification state (will move to context/store for full app)
   const [notifications, setNotifications] = useState([
-    // Example on start:
     // { id: 1, type: "info", message: "Welcome to CampusScheduleSync!", onClose: () => { ... } },
   ]);
 
   const addNotification = (notif) => {
+    const ts = Date.now();
     setNotifications((prev) => [
       ...prev,
-      { ...notif, id: Date.now(), onClose: () => removeNotification(Date.now()) }
+      { ...notif, id: ts, onClose: () => removeNotification(ts) }
     ]);
   };
 
   const removeNotification = (id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
-
-  // Example way to show a notification (for demonstration, to be replaced in real usage)
-  // React.useEffect(() => {
-  //   addNotification({ type: "success", message: "Scheduling feature coming soon!" });
-  // }, []);
 
   return (
     <div className="app">
@@ -44,21 +40,8 @@ function App() {
 
       <main style={{ marginTop: 60 }}>
         <div className="container">
-          <div className="hero">
-            <div className="subtitle">
-              Timetable Management for Colleges • Modern, Fast, User-Friendly
-            </div>
-            <h1 className="title">CampusScheduleSync</h1>
-            <div className="description">
-              Efficient class, faculty, and resource scheduling. Real-time Supabase integration. Streamlined with an accessible green/white theme.
-            </div>
-            <button
-              className="btn btn-large"
-              onClick={() => addNotification({ type: "success", message: "Get started with timetable creation soon!" })}
-            >
-              Try Demo Action
-            </button>
-          </div>
+          {/* Replace hero with Dashboard main entry */}
+          <Dashboard />
         </div>
       </main>
     </div>
