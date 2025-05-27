@@ -16,46 +16,69 @@
 body {
   margin: 0;
   font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-  background-color: var(--kavia-dark);
-  color: var(--text-color);
+  background: var(--background-white);
+  color: var(--text-dark);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--background-white);
 }
 
 .navbar {
-  background-color: var(--kavia-dark);
-  padding: 16px;
+  background: var(--navbar-bg);
+  padding: 0 0;
+  box-shadow: var(--navbar-shadow);
+  min-height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-color);
-  position: fixed;
+  position: sticky;
   top: 0;
   width: 100%;
-  box-sizing: border-box;
   z-index: 100;
 }
 
+.navbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  height: 60px;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .logo {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  color: var(--primary-green);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  user-select: none;
 }
 
 .logo-symbol {
-  color: var(--kavia-orange);
+  font-weight: 900;
+  color: var(--accent-green);
+  font-size: 1.5rem;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px;
   width: 100%;
@@ -63,7 +86,7 @@ body {
 }
 
 .hero {
-  padding-top: 120px;
+  padding-top: 100px;
   padding-bottom: 64px;
   text-align: center;
   display: flex;
@@ -73,43 +96,120 @@ body {
 }
 
 .subtitle {
-  color: var(--kavia-orange);
-  font-weight: 500;
-  font-size: 1.1rem;
+  color: var(--primary-green);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: .2px;
 }
 
 .title {
-  font-size: 3.5rem;
-  font-weight: 600;
+  font-size: 3rem;
+  font-weight: 700;
   line-height: 1.2;
   margin: 0;
+  color: var(--text-dark);
 }
 
 .description {
-  font-size: 1.1rem;
-  line-height: 1.5;
+  font-size: 1.07rem;
+  line-height: 1.6;
   color: var(--text-secondary);
-  max-width: 600px;
-  margin-bottom: 16px;
+  max-width: 620px;
+  margin-bottom: 24px;
 }
 
 .btn {
-  background-color: var(--kavia-orange);
-  color: white;
+  background: var(--primary-green);
+  color: #fff;
   border: none;
   border-radius: 4px;
-  padding: 10px 20px;
+  box-shadow: 0 2px 8px 0 rgba(46,204,64,0.05);
+  padding: 10px 22px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background 0.15s, box-shadow 0.15s;
+  outline: none;
+  margin: 0 3px;
+}
+
+.btn:focus, .btn:active {
+  box-shadow: 0 0 0 2px var(--accent-green), 0 2px 8px 0 rgba(39,174,96,0.08);
 }
 
 .btn:hover {
-  background-color: #FF8B4D;
+  background: var(--accent-green);
 }
 
 .btn-large {
-  padding: 12px 24px;
+  padding: 13px 28px;
+  font-size: 1.14rem;
+}
+
+@media (max-width: 700px) {
+  .container { padding: 0 14px; }
+  .navbar-inner { padding: 0 8px; }
+  .title { font-size: 2.1rem; }
+  .hero { padding-top: 70px; padding-bottom: 36px; }
+}
+
+.notification-root {
+  position: fixed;
+  top: 74px;
+  right: 20px;
+  min-width: 260px;
+  z-index: 2300;
+  pointer-events: none;
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 16px 18px 16px 18px;
+  border-radius: 7px;
+  background: var(--notification-bg);
+  color: var(--text-dark);
+  box-shadow: 0 4px 22px rgba(46,204,64,0.09);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--primary-green);
+  pointer-events: auto;
+  opacity: 0.96;
+  min-width: 220px;
+  max-width: 370px;
+  transition: opacity 0.18s;
+}
+
+.notification.success {
+  border-left-color: var(--notification-success);
+}
+
+.notification.error {
+  border-left-color: var(--notification-error);
+}
+
+.notification.info {
+  border-left-color: var(--notification-info);
+}
+
+.notification-content {
+  flex: 1 1 auto;
+}
+
+.notification-close {
+  color: var(--accent-green);
+  border: none;
+  background: none;
   font-size: 1.1rem;
+  margin-left: 1em;
+  cursor: pointer;
+  opacity: 0.6;
+  pointer-events: auto;
+}
+
+.notification-close:hover {
+  color: #111;
+  opacity: 1;
 }
