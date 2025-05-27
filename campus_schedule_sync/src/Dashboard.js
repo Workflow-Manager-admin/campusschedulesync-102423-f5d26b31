@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import CourseList from "./CourseList";
 import RoomList from "./RoomList";
+import CourseAllocation from "./CourseAllocation";
+import RoomAssignment from "./RoomAssignment";
 
 /**
  * Dashboard container: hosts all major app panels (Timetable, Courses, Faculty, Rooms, Import/Export, Allocation).
@@ -52,10 +54,7 @@ function getSectionComponent(section) {
   }
 }
 
-import CourseAllocation from "./CourseAllocation";
-import RoomAssignment from "./RoomAssignment";
-
-// Tabbed allocation panel for allocation section
+ // Tabbed allocation panel for allocation section
 function AllocationPanels() {
   const [tab, setTab] = useState("course");
   return (
