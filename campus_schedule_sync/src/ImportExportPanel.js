@@ -5,6 +5,13 @@ import RoomBulkImportExport from "./RoomBulkImportExport";
 import TimetableGrid from "./TimetableGrid";
 import { useSupabase } from "./SupabaseProvider";
 import Notification from "./Notification";
+import {
+  parseCSV,
+  triggerCSVDownload,
+  triggerExcelDownload,
+  triggerImageExport,
+  readSpreadsheetFile
+} from "./utils";
 
 /**
  * PUBLIC_INTERFACE
@@ -113,20 +120,14 @@ function ImportExportPanel() {
     triggerCSVDownload(csv, "Timetable_Export.csv");
   }
 
-  // Export grid view as image
+  // Export grid view as image using utils (html2canvas)
   async function handleTimetableExportImage() {
-    if (!window.html2canvas) {
-      // Optionally lazy load html2canvas if not loaded
-      await loadHtml2Canvas();
-    }
     if (timetableRef.current) {
-      window.html2canvas(timetableRef.current).then(canvas => {
-        const url = canvas.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "TimetableGrid.png";
-        a.click();
-      });
+      try {
+        await triggerImageExport(timetableRef.current, "TimetableGrid.png");
+      } catch (err) {
+        setImportFeedback({ type: "error", message: "Export as image failed: " + err.message });
+      }
     } else {
       setImportFeedback({ type: "error", message: "Timetable grid not found." });
     }
