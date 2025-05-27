@@ -52,6 +52,55 @@ function getSectionComponent(section) {
   }
 }
 
+import CourseAllocation from "./CourseAllocation";
+import RoomAssignment from "./RoomAssignment";
+
+// Tabbed allocation panel for allocation section
+function AllocationPanels() {
+  const [tab, setTab] = useState("course");
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 2, marginBottom: 18 }}>
+        <button
+          className="btn"
+          style={{
+            background: tab === "course" ? "var(--primary-green)" : "var(--navbar-bg)",
+            color: tab === "course" ? "#fff" : "var(--text-dark)",
+            borderBottom: tab === "course" ? "3px solid var(--accent-green)" : "none",
+            borderRadius: "4px 4px 0 0",
+            fontWeight: tab === "course" ? 700 : 500,
+            minWidth: 150,
+            outline: tab === "course" ? "2px solid var(--accent-green)" : "none"
+          }}
+          onClick={() => setTab("course")}
+          aria-current={tab === "course" ? "page" : undefined}
+        >
+          Course-to-Faculty
+        </button>
+        <button
+          className="btn"
+          style={{
+            background: tab === "room" ? "var(--primary-green)" : "var(--navbar-bg)",
+            color: tab === "room" ? "#fff" : "var(--text-dark)",
+            borderBottom: tab === "room" ? "3px solid var(--accent-green)" : "none",
+            borderRadius: "4px 4px 0 0",
+            fontWeight: tab === "room" ? 700 : 500,
+            minWidth: 150,
+            outline: tab === "room" ? "2px solid var(--accent-green)" : "none"
+          }}
+          onClick={() => setTab("room")}
+          aria-current={tab === "room" ? "page" : undefined}
+        >
+          Course-to-Room
+        </button>
+      </div>
+      <div>
+        {tab === "course" ? <CourseAllocation /> : <RoomAssignment />}
+      </div>
+    </div>
+  );
+}
+
 // PUBLIC_INTERFACE
 /**
  * Dashboard: main navigation container for all app modules.

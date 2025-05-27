@@ -33,3 +33,20 @@ src/Dashboard.js
 Search for the keywords to learn more about each error.
 
 webpack compiled with 1 error
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/Dashboard.js
+  Line 55:1:  Import in body of module; reorder to top  import/first
+  Line 56:1:  Import in body of module; reorder to top  import/first
+
+Search for the keywords to learn more about each error.
+ERROR in [eslint] 
+src/Dashboard.js
+  Line 55:1:  Import in body of module; reorder to top  import/first
+  Line 56:1:  Import in body of module; reorder to top  import/first
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error
