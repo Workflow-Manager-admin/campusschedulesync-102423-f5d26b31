@@ -2,18 +2,18 @@
 -- The following assumes 'id' columns are auto-incrementing or assigned as shown.
 
 -- ===== FACULTY =====
-INSERT INTO faculty (id, name, department, email) VALUES
-  (1, 'Dr. Alice Martin', 'Computer Science', 'alice.martin@campus.edu'),
-  (2, 'Prof. Bob Gupta', 'Mechanical Engineering', 'bob.gupta@campus.edu'),
-  (3, 'Dr. Carol Lin', 'Physics', 'carol.lin@campus.edu'),
-  (4, 'Dr. David Osei', 'Mathematics', 'david.osei@campus.edu'),
-  (5, 'Prof. Emily Wang', 'Chemistry', 'emily.wang@campus.edu'),
-  (6, 'Dr. Frank Gomez', 'Civil Engineering', 'frank.gomez@campus.edu'),
-  (7, 'Prof. Grace Lee', 'Electrical Engineering', 'grace.lee@campus.edu'),
-  (8, 'Dr. Henry Kim', 'Biology', 'henry.kim@campus.edu'),
-  (9, 'Prof. Irene Petrova', 'History', 'irene.petrova@campus.edu'),
-  (10, 'Dr. Jack Novak', 'Philosophy', 'jack.novak@campus.edu'),
-  (11, 'Prof. Lara Singh', 'Economics', 'lara.singh@campus.edu');
+INSERT INTO faculty (id, name, department, email, faculty_code) VALUES
+  (1, 'Dr. Alice Martin', 'Computer Science', 'alice.martin@campus.edu', 'FAC001'),
+  (2, 'Prof. Bob Gupta', 'Mechanical Engineering', 'bob.gupta@campus.edu', 'FAC002'),
+  (3, 'Dr. Carol Lin', 'Physics', 'carol.lin@campus.edu', 'FAC003'),
+  (4, 'Dr. David Osei', 'Mathematics', 'david.osei@campus.edu', 'FAC004'),
+  (5, 'Prof. Emily Wang', 'Chemistry', 'emily.wang@campus.edu', 'FAC005'),
+  (6, 'Dr. Frank Gomez', 'Civil Engineering', 'frank.gomez@campus.edu', 'FAC006'),
+  (7, 'Prof. Grace Lee', 'Electrical Engineering', 'grace.lee@campus.edu', 'FAC007'),
+  (8, 'Dr. Henry Kim', 'Biology', 'henry.kim@campus.edu', 'FAC008'),
+  (9, 'Prof. Irene Petrova', 'History', 'irene.petrova@campus.edu', 'FAC009'),
+  (10, 'Dr. Jack Novak', 'Philosophy', 'jack.novak@campus.edu', 'FAC010'),
+  (11, 'Prof. Lara Singh', 'Economics', 'lara.singh@campus.edu', 'FAC011');
 
 -- ===== ROOMS =====
 INSERT INTO rooms (id, name, building, capacity) VALUES
