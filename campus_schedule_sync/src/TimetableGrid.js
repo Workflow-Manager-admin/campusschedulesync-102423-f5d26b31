@@ -337,16 +337,45 @@ function TimetableGrid() {
                 </td>
                 {WEEKDAYS.map((day) => {
                   const slotSessions = cellSessions(day, slot.start);
+                  // Drag & Drop events
+                  const isHoverTarget =
+                    dragDrop.dragState === "dragging" &&
+                    dragDrop.hovered &&
+                    dragDrop.hovered.day === day &&
+                    dragDrop.hovered.time === slot.start;
+
                   return (
                     <td
                       key={day + slot.start}
                       style={{
                         ...cellStyleBody,
                         background:
-                          slotSessions.length === 0 ? "#fafbfa" : "#e8f5e9",
+                          isHoverTarget
+                            ? "#fffacc"
+                            : slotSessions.length === 0
+                            ? "#fafbfa"
+                            : "#e8f5e9",
+                        border: isHoverTarget
+                          ? "2px dashed #f39c12"
+                          : cellStyleBody.borderLeft,
                         position: "relative",
-                        cursor: slotSessions.length === 0 ? "pointer" : "default",
+                        cursor:
+                          dragDrop.dragState === "dragging"
+                            ? "copy"
+                            : slotSessions.length === 0
+                            ? "pointer"
+                            : "default",
                         minWidth: 140,
+                        outline:
+                          isHoverTarget && dragDrop.dragState === "dragging"
+                            ? "2px solid #f39c12"
+                            : "none",
+                        opacity:
+                          dragDrop.dragState === "dragging" &&
+                          slotSessions.length > 0
+                            ? 0.55
+                            : 1,
+                        transition: "background 0.10s, outline 0.10s",
                       }}
                       tabIndex={0}
                       aria-label={
@@ -359,6 +388,31 @@ function TimetableGrid() {
                           ? handleAdd(day, slot.start)
                           : undefined
                       }
+                      onDragOver={e => {
+                        e.preventDefault();
+                        if (dragDrop.dragState === "dragging" && slotSessions.length === 0) {
+                          dragDrop.updateHover(day, slot.start);
+                        }
+                      }}
+                      onDragEnter={e => {
+                        e.preventDefault();
+                        if (dragDrop.dragState === "dragging" && slotSessions.length === 0) {
+                          dragDrop.updateHover(day, slot.start);
+                        }
+                      }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (
+                          dragDrop.dragState === "dragging" &&
+                          dragDrop.draggingSession &&
+                          slotSessions.length === 0
+                        ) {
+                          dragDrop.handleDrop({ day, time: slot.start });
+                        }
+                      }}
+                      onDragLeave={e => {
+                        // Optionally clear hover state
+                      }}
                     >
                       {slotSessions.length === 0 ? (
                         <span style={{ color: "#bbb" }}>+</span>
@@ -376,13 +430,27 @@ function TimetableGrid() {
                               boxShadow: "0 1px 4px 0 rgba(46, 204, 64, 0.12)",
                               cursor: "pointer",
                               outline: "2px solid transparent",
+                              opacity:
+                                dragDrop.dragState === "dragging" &&
+                                dragDrop.draggingSession &&
+                                dragDrop.draggingSession.id === s.id
+                                  ? 0.45
+                                  : 1,
                             }}
                             tabIndex={0}
                             role="button"
                             aria-label={`Session: ${courseMap[s.course_id]?.name || "Unknown"}; Faculty: ${facultyMap[s.faculty_id]?.name || "Unknown"}; Room: ${roomMap[s.room_id]?.name || "Unknown"}; Edit`}
+                            draggable
+                            onDragStart={e => {
+                              // Start drag
+                              dragDrop.beginDrag(s, { day, time: slot.start });
+                            }}
                             onClick={e => {
                               e.stopPropagation();
                               handleEdit(s);
+                            }}
+                            onDragEnd={e => {
+                              dragDrop.endDrag();
                             }}
                           >
                             <div title="Course" style={{ fontWeight: 600 }}>
@@ -486,6 +554,13 @@ function TimetableGrid() {
           </div>
         </div>
       )}
+      <ConflictModal
+        open={conflictModal.open}
+        conflicts={conflictModal.conflicts}
+        canOverride={conflictModal.canOverride}
+        onClose={handleModalClose}
+        onOverride={handleOverrideProceed}
+      />
       {loading ? (
         <div style={{ marginTop: 18, color: "#888" }}>Loading sessions…</div>
       ) : null}
