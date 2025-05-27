@@ -1,13 +1,13 @@
 -- Insert sample data for CampusScheduleSync
--- First insert rooms, courses, faculty with explicit IDs
+-- First insert rooms, courses, faculty with explicit IDs and required NOT NULL columns
 -- Then insert timetable_entries with correct referencing IDs
 
--- Rooms
-INSERT INTO rooms (id, name, capacity, type)
+-- Rooms (ensure room_code is unique and non-null for every room)
+INSERT INTO rooms (id, room_code, name, capacity, type)
 VALUES 
-  (1, 'Room A', 30, 'Lecture Hall'),
-  (2, 'Room B', 25, 'Lecture Hall'),
-  (3, 'Lab 1', 20, 'Laboratory');
+  (1, 'RM001', 'Room A', 30, 'Lecture Hall'),
+  (2, 'RM002', 'Room B', 25, 'Lecture Hall'),
+  (3, 'RM003', 'Lab 1', 20, 'Laboratory');
 
 -- Courses
 INSERT INTO courses (id, code, name, department)
