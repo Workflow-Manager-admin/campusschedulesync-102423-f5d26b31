@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import "./App.css";
 import TimetableEntryForm from "./TimetableEntryForm";
+import { useSupabase } from "./SupabaseProvider";
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-// PUBLIC_INTERFACE
-function getSupabaseClient() {
-  /** Returns a Supabase client, configured from env vars. */
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
+// No longer need local Supabase config or client creation.
 
 // Helpers for days and time slots (could be extracted)
 const weekdays = [
@@ -72,7 +65,7 @@ export default function TimetableGrid() {
   const [formSlot, setFormSlot] = useState(null);
   const [error, setError] = useState(null);
 
-  const supabase = getSupabaseClient();
+  const supabase = useSupabase();
 
   // Support for lookup of faculty, room, and course codes
   const [courses, setCourses] = useState([]);
