@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import TimetableEntryForm from "./TimetableEntryForm";
 import { useSupabase } from "./SupabaseProvider";
-
+// DnD imports
+import {
+  DragDropContext,
+  Droppable,
+  Draggable
+} from "@hello-pangea/dnd";
 // No longer need local Supabase config or client creation.
 
 // Helpers for days and time slots (could be extracted)
@@ -78,6 +83,12 @@ export default function TimetableGrid() {
     // No real-time - could subscribe to changes for full live sync if needed
     // eslint-disable-next-line
   }, []);
+
+  // Filter unscheduled courses for drag-and-drop cards
+  const scheduledCourseIds = new Set(timetable.map((t) => t.course_id));
+  const unscheduledCourses = courses.filter(
+    (c) => !scheduledCourseIds.has(c.id)
+  );
 
   // PUBLIC_INTERFACE
   async function fetchAll() {
