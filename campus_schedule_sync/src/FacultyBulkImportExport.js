@@ -108,7 +108,7 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
               f.name &&
               f.email &&
               f.department &&
-              String(r[3]?.trim() || "").length > 0
+              String(f.classes_per_week || "").length > 0
           );
         // Validation: no >12 classes/week
         const violating = mapped.find(f => Number(f.classes_per_week) > 12);
