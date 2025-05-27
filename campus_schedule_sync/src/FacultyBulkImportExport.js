@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 /**
  * PUBLIC_INTERFACE
@@ -14,6 +14,10 @@ import React, { useRef } from "react";
 function FacultyBulkImportExport({ faculty = [], onImport }) {
   const fileInput = useRef(null);
 
+  // Accessibility and feedback state
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const liveRegionRef = useRef(null);
+
   // Template CSV header/row
   const TEMPLATE_HEADER = [
     "name",
@@ -28,6 +32,7 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
 
   /** Download empty template */
   function handleDownloadTemplate() {
+    setFeedback({ type: "info", message: "Faculty template CSV downloaded." });
     const csv = [
       TEMPLATE_HEADER.join(","),
       ...TEMPLATE_SAMPLE.map(row => row.map(field => `"${field}"`).join(",")),
@@ -37,6 +42,7 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
 
   /** Download current faculty (export) */
   function handleExportFaculty() {
+    setFeedback({ type: "info", message: "Faculty records exported." });
     const csv = [
       TEMPLATE_HEADER.join(","),
       ...faculty.map(f =>
@@ -55,6 +61,7 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
 
   /** Upload & import CSV */
   function handleFileChange(e) {
+    setFeedback({ type: "", message: "" }); // Clear earlier
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -63,9 +70,12 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
       try {
         const parsed = parseCSV(text);
         if (!parsed.length || parsed[0].length < 4) {
-          alert(
-            "Invalid file: requires fields name, email, department, classes_per_week"
-          );
+          setFeedback({
+            type: "error",
+            message: "Invalid file: requires fields name, email, department, classes_per_week"
+          });
+          fileInput.current.value = "";
+          liveRegionRef.current && liveRegionRef.current.focus();
           return;
         }
         const header = parsed[0].map(h => h.trim().toLowerCase());
@@ -75,7 +85,12 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
           header[2] !== "department" ||
           header[3] !== "classes_per_week"
         ) {
-          alert("CSV header must be: name, email, department, classes_per_week");
+          setFeedback({
+            type: "error",
+            message: "CSV header must be: name, email, department, classes_per_week"
+          });
+          fileInput.current.value = "";
+          liveRegionRef.current && liveRegionRef.current.focus();
           return;
         }
         const rows = parsed
@@ -93,57 +108,130 @@ function FacultyBulkImportExport({ faculty = [], onImport }) {
               f.name &&
               f.email &&
               f.department &&
-              // Accepts zero classes/week but field required
               String(r[3]?.trim() || "").length > 0
           );
         // Validation: no >12 classes/week
         const violating = mapped.find(f => Number(f.classes_per_week) > 12);
         if (violating) {
-          alert(
-            `Faculty "${violating.name}" exceeds 12 classes/week. Please fix the file.`
-          );
+          setFeedback({
+            type: "error",
+            message: `Faculty "${violating.name}" exceeds 12 classes/week. Please fix the file.`
+          });
+          fileInput.current.value = "";
+          liveRegionRef.current && liveRegionRef.current.focus();
           return;
         }
         if (mapped.length === 0) {
-          alert("No valid rows in file.");
+          setFeedback({ type: "error", message: "No valid rows in file." });
+          fileInput.current.value = "";
+          liveRegionRef.current && liveRegionRef.current.focus();
           return;
         }
-        if (onImport) onImport(mapped);
+        if (onImport) {
+          setFeedback({ type: "success", message: `Ready to import: ${mapped.length} faculty (see preview above).`});
+          onImport(mapped);
+        }
       } catch (err) {
-        alert("Could not parse file: " + err.message);
+        setFeedback({ type: "error", message: "Could not parse file: " + err.message });
+        fileInput.current.value = "";
+        liveRegionRef.current && liveRegionRef.current.focus();
       }
     };
     reader.readAsText(file);
   }
 
+  // Keyboard: Enter on visible Import triggers file input, Escape clears state
+  function handleImportButtonKeyDown(e) {
+    if (e.key === "Enter" || e.key === " " || e.keyCode === 32 || e.keyCode === 13) {
+      fileInput.current?.click();
+    } else if (e.key === "Escape" || e.keyCode === 27) {
+      setFeedback({ type: "", message: "" });
+      fileInput.current.value = "";
+    }
+  }
+
+  // Ensure feedback region focus on error/info for screen readers
+  React.useEffect(() => {
+    if (feedback.type === "error" || feedback.type === "success") {
+      liveRegionRef.current && liveRegionRef.current.focus();
+    }
+  }, [feedback]);
+
   return (
-    <div style={{ display: "flex", gap: 9 }}>
-      <button className="btn" type="button" onClick={handleDownloadTemplate}>
-        Download Template
-      </button>
-      <button
-        className="btn"
-        type="button"
-        onClick={handleExportFaculty}
-        disabled={faculty.length === 0}
+    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+      <div style={{ display: "flex", gap: 9 }}>
+        <button
+          className="btn"
+          type="button"
+          onClick={handleDownloadTemplate}
+          aria-label="Download faculty CSV template"
+        >
+          Download Template
+        </button>
+        <button
+          className="btn"
+          type="button"
+          onClick={handleExportFaculty}
+          disabled={faculty.length === 0}
+          aria-label="Export current faculty as CSV"
+        >
+          Export
+        </button>
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          ref={fileInput}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+          tabIndex={-1}
+          aria-hidden="true"
+          data-testid="bulkimport-file"
+        />
+        <button
+          className="btn"
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          onKeyDown={handleImportButtonKeyDown}
+          aria-label="Import faculty from CSV"
+        >
+          Import
+        </button>
+      </div>
+      <div
+        ref={liveRegionRef}
+        tabIndex={-1}
+        aria-live={feedback.type === "error" ? "assertive" : "polite"}
+        aria-atomic="true"
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          width: "1px",
+          height: "1px",
+          overflow: "hidden"
+        }}
       >
-        Export
-      </button>
-      <input
-        type="file"
-        accept=".csv,text/csv"
-        ref={fileInput}
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-        data-testid="bulkimport-file"
-      />
-      <button
-        className="btn"
-        type="button"
-        onClick={() => fileInput.current?.click()}
-      >
-        Import
-      </button>
+        {feedback.message}
+      </div>
+      {/* Optionally show feedback inline visually for all users */}
+      {feedback.message && (
+        <div
+          className={`feedback-message ${feedback.type}`}
+          role={feedback.type === "error" ? "alert" : "status"}
+          aria-live={feedback.type === "error" ? "assertive" : "polite"}
+          aria-atomic="true"
+          style={{
+            marginTop: 6,
+            color:
+              feedback.type === "error"
+                ? "#b00020"
+                : feedback.type === "success"
+                ? "#215a35"
+                : "#222"
+          }}
+        >
+          {feedback.message}
+        </div>
+      )}
     </div>
   );
 }
