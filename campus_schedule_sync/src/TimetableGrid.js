@@ -1,601 +1,401 @@
-import React, { useState, useEffect, useMemo } from "react";
-import useTimetable from "./useTimetable";
-import TimetableEntryForm from "./TimetableEntryForm";
-import { useSupabase } from "./SupabaseProvider";
-import Notification from "./Notification";
-import useDragDrop from "./useDragDrop";
-import { checkSessionConflicts, explainConflicts } from "./conflictDetector";
-import ConflictModal from "./ConflictModal";
+import React, { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient";
 
+// PUBLIC_INTERFACE
 /**
- * PUBLIC_INTERFACE
- * TimetableGrid: Week-view timetable/calendar for viewing and managing sessions.
- * - Displays grid with days as columns and time slots as rows.
- * - Allows creating, editing, and deleting sessions (CRUD) using useTimetable.js.
- * - Integrates TimetableEntryForm.js for session add/edit.
- * - Sessions are associated with courses, faculty, and rooms (resolved by ID).
+ * TimetableGrid displays a week-view calendar to show/manage timetable/session blocks.
+ * Integrates with Supabase for CRUD and displays course, faculty, and room allocation.
  */
 function TimetableGrid() {
-  // Data: timetable session CRUD
-  const {
-    sessions,
-    loading,
-    error,
-    addSession,
-    updateSession,
-    deleteSession,
-    refresh,
-  } = useTimetable();
-
-  // Data: courses, faculty, rooms for lookup
-  const supabase = useSupabase();
+  // State for timetable, reference data, and UI/modal management
+  const [sessions, setSessions] = useState([]);
   const [courses, setCourses] = useState([]);
   const [faculty, setFaculty] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [lookupError, setLookupError] = useState("");
 
-  // UI State
-  const [showForm, setShowForm] = useState(false);
-  const [formMode, setFormMode] = useState("add"); // "add" | "edit"
-  const [editingEntry, setEditingEntry] = useState(null); // session object or null
-  const [notification, setNotification] = useState(null); // { type, message }
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create"); // "create" | "edit"
 
-  // Drag & Drop State / Conflict UI for timetable
-  const [conflictModal, setConflictModal] = useState({
-    open: false,
-    conflicts: [],
-    canOverride: false,
-    dndParams: null,   // {session, destCell}
-  });
+  const [error, setError] = useState("");
 
-  // Timetable config
-  const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const TIME_START = "08:00";
-  const TIME_END = "18:00";
-  // 1hr granularity for now
-  const TIME_INTERVAL_MINS = 60;
+  // Timetable params (customize as needed)
+  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const timeslots = [
+    "08:00", "09:00", "10:00", "11:00", "12:00",
+    "13:00", "14:00", "15:00", "16:00", "17:00"
+  ];
 
-  /** Fetch necessary lookup data for session forms */
+  // Fetch sessions and reference data
   useEffect(() => {
-    async function fetchLookups() {
-      try {
-        const [courseRes, facultyRes, roomRes] = await Promise.all([
-          supabase.from("courses").select("id,name,code"),
-          supabase.from("faculty").select("id,name"),
-          supabase.from("rooms").select("id,name"),
-        ]);
-        if (courseRes.error) throw new Error(`Courses: ${courseRes.error.message}`);
-        if (facultyRes.error) throw new Error(`Faculty: ${facultyRes.error.message}`);
-        if (roomRes.error) throw new Error(`Rooms: ${roomRes.error.message}`);
-        setCourses(courseRes.data || []);
-        setFaculty(facultyRes.data || []);
-        setRooms(roomRes.data || []);
-      } catch (err) {
-        setLookupError(err.message || "Failed to lookup data.");
-      }
-    }
-    fetchLookups();
-  }, [supabase]);
-
-  // useDragDrop connection
-  const dragDrop = useDragDrop({
-    sessions,
-    // onDrop provides new session and destCell {day,time}
-    onDrop: async (session, destCell) => {
-      // Proposed "move" to new cell (update day and start_time only; keep other)
-      const newSession = {
-        ...session,
-        day: destCell.day,
-        start_time: destCell.time,
-        // Preserve existing interval duration
-        end_time: addTime(destCell.time, sessionDuration(session)),
-      };
-      // Real-time conflict check
-      const { hasConflict, conflicts, canOverride } = checkSessionConflicts(
-        newSession,
-        sessions.filter((s) => s.id !== session.id),
-        { policies: { facultyMaxPerWeek: 12 } }
-      );
-      if (hasConflict) {
-        // Show modal before actually updating if conflict found
-        setConflictModal({
-          open: true,
-          conflicts,
-          canOverride,
-          dndParams: { session, destCell, newSession },
-        });
-        return { status: "conflict" };
-      } else {
-        // Direct commit
-        await updateSession(session.id, {
-          day: destCell.day,
-          start_time: destCell.time,
-          end_time: addTime(destCell.time, sessionDuration(session)),
-        });
-        refresh();
-        setNotification({ type: "success", message: "Session moved successfully." });
-        return { status: "success" };
-      }
-    },
-  });
-
-  // Util: parse hour/minute "HH:MM"
-  function parseTime(timeStr) {
-    const [h, m] = timeStr.split(":").map(Number);
-    return { h, m };
-  }
-  // Util: add duration in minutes to time string
-  function addTime(timeStr, minutes) {
-    let { h, m } = parseTime(timeStr);
-    m += minutes;
-    h += Math.floor(m / 60);
-    m = m % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-  }
-  // Util: session duration (minutes)
-  function sessionDuration(s) {
-    if (!s) return TIME_INTERVAL_MINS;
-    const pStart = parseTime(s.start_time);
-    const pEnd = parseTime(s.end_time);
-    return (pEnd.h * 60 + pEnd.m) - (pStart.h * 60 + pStart.m);
-  }
-
-  // Handler: on admin override in modal
-  function handleOverrideProceed() {
-    if (
-      !conflictModal.dndParams ||
-      !conflictModal.dndParams.session ||
-      !conflictModal.dndParams.destCell
-    ) {
-      setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
-      return;
-    }
-    // Perform update session forcibly
-    updateSession(
-      conflictModal.dndParams.session.id,
-      {
-        day: conflictModal.dndParams.destCell.day,
-        start_time: conflictModal.dndParams.destCell.time,
-        end_time: addTime(
-          conflictModal.dndParams.destCell.time,
-          sessionDuration(conflictModal.dndParams.session)
-        ),
-      }
-    ).then(() => {
-      refresh();
-      setNotification({ type: "success", message: "Override: Session moved (policy violation overridden)." });
-    });
-    setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
-  }
-
-  // Handler: close/modal cancel
-  function handleModalClose() {
-    setConflictModal({ open: false, conflicts: [], canOverride: false, dndParams: null });
-  }
-
-  // Help: map ID to entity for display
-  const courseMap = useMemo(() => Object.fromEntries(courses.map(c => [c.id, c])), [courses]);
-  const facultyMap = useMemo(() => Object.fromEntries(faculty.map(f => [f.id, f])), [faculty]);
-  const roomMap = useMemo(() => Object.fromEntries(rooms.map(r => [r.id, r])), [rooms]);
-
-  /** Generate timetable grid time slots */
-  const timeSlots = useMemo(() => {
-    const slots = [];
-    let [h, m] = TIME_START.split(":").map(Number);
-    const [endH, endM] = TIME_END.split(":").map(Number);
-    while (h < endH || (h === endH && m < endM)) {
-      const nextM = m + TIME_INTERVAL_MINS;
-      let nextH = h;
-      if (nextM >= 60) {
-        nextH = h + Math.floor(nextM / 60);
-      }
-      const currStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-      const nextStr = `${nextH.toString().padStart(2, "0")}:${(nextM % 60).toString().padStart(2, "0")}`;
-      slots.push({ start: currStr, end: nextStr });
-      h = nextH;
-      m = nextM % 60;
-    }
-    return slots;
+    fetchReferenceData();
+    fetchSessions();
+    // eslint-disable-next-line
   }, []);
 
-  /** Filter sessions for a cell (day, time slot) - only show if it starts in this slot */
-  function cellSessions(day, timeStart) {
-    return sessions.filter(
-      (s) =>
-        s.day === day &&
-        s.start_time === timeStart // strict match, "09:00"
-    );
+  async function fetchReferenceData() {
+    // Fetch list of courses, faculty, rooms
+    let { data: courseData } = await supabase.from("course").select("*").order("code");
+    let { data: facultyData } = await supabase.from("faculty").select("*").order("name");
+    let { data: roomData } = await supabase.from("room").select("*").order("code");
+    setCourses(courseData || []);
+    setFaculty(facultyData || []);
+    setRooms(roomData || []);
   }
 
-  /** Handle clicking an empty cell: open add form for that day/time */
-  function handleAdd(day, time) {
-    setFormMode("add");
-    setEditingEntry({
-      day,
-      start_time: time,
-      end_time: nextTime(time), // default 1hr
+  async function fetchSessions() {
+    // Fetch sessions from timetable/schedule/session table with relevant joins
+    // Likely table is "session", with FK to course, faculty, room
+    const { data, error } = await supabase
+      .from("session")
+      .select(`
+        *,
+        course:course_id ( id, code, name ),
+        faculty:faculty_id ( id, name ),
+        room:room_id ( id, code )
+      `);
+    if (error) setError(error.message);
+    setSessions(data || []);
+  }
+
+  function handleCellDoubleClick(day, slot) {
+    // Open modal for "create" with default time
+    setSelectedSession({
+      id: null,
+      day_of_week: day,
+      start_time: slot,
+      end_time: timeslots[timeslots.indexOf(slot) + 1] || slot,
       course_id: "",
       faculty_id: "",
       room_id: "",
     });
-    setShowForm(true);
+    setModalMode("create");
+    setModalOpen(true);
+    setError("");
   }
 
-  /** Handle editing an existing session */
-  function handleEdit(session) {
-    setFormMode("edit");
-    setEditingEntry(session);
-    setShowForm(true);
+  function handleSessionClick(session) {
+    setSelectedSession(session);
+    setModalMode("edit");
+    setModalOpen(true);
+    setError("");
   }
 
-  /** Handler for form submission (add or update) */
-  async function handleSave(form) {
-    if (formMode === "add") {
-      const ok = await addSession(form);
-      if (ok) {
-        setNotification({ type: "success", message: "Session added." });
-        refresh();
-        return true;
-      } else {
-        setNotification({ type: "error", message: "Failed to add session." });
-        return false;
-      }
-    } else if (formMode === "edit" && editingEntry?.id) {
-      const ok = await updateSession(editingEntry.id, form);
-      if (ok) {
-        setNotification({ type: "success", message: "Session updated." });
-        refresh();
-        return true;
-      } else {
-        setNotification({ type: "error", message: "Failed to update session." });
-        return false;
-      }
-    }
-    return false;
-  }
-
-  /** Handler for session deletion */
-  async function handleDelete(session) {
+  async function handleDelete(sessionId) {
     if (!window.confirm("Delete this session?")) return;
-    const ok = await deleteSession(session.id);
-    if (ok) {
-      setNotification({ type: "success", message: "Session deleted." });
-      refresh();
-    } else {
-      setNotification({ type: "error", message: "Failed to delete session." });
-    }
+    const { error } = await supabase.from("session").delete().eq("id", sessionId);
+    if (error) setError(error.message);
+    setModalOpen(false);
+    fetchSessions();
   }
 
-  /** Utility: add 1hr to timeStr "09:00" by interval (returns "10:00") */
-  function nextTime(timeStr) {
-    let [h, m] = timeStr.split(":").map(Number);
-    m += TIME_INTERVAL_MINS;
-    if (m >= 60) {
-      h += 1;
-      m = m % 60;
+  async function handleModalSubmit(e) {
+    e.preventDefault();
+    const payload = {
+      day_of_week: selectedSession.day_of_week,
+      start_time: selectedSession.start_time,
+      end_time: selectedSession.end_time,
+      course_id: selectedSession.course_id,
+      faculty_id: selectedSession.faculty_id,
+      room_id: selectedSession.room_id,
+    };
+    if (modalMode === "create") {
+      // Insert new session
+      const { error } = await supabase.from("session").insert(payload);
+      if (error) setError(error.message);
+    } else if (modalMode === "edit") {
+      // Update session
+      const { error } = await supabase
+        .from("session")
+        .update(payload)
+        .eq("id", selectedSession.id);
+      if (error) setError(error.message);
     }
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+    setModalOpen(false);
+    fetchSessions();
   }
+
+  // UTIL: Find session in a grid cell
+  function sessionForCell(day, slot) {
+    return sessions.find(
+      (s) =>
+        s.day_of_week === day &&
+        s.start_time === slot
+    );
+  }
+
+  // UTIL: Display allocation info in a block
+  function sessionInfoBlock(session) {
+    if (!session) return null;
+    return (
+      <div
+        className="session-block"
+        onClick={() => handleSessionClick(session)}
+        title="Edit session"
+        style={{
+          cursor: "pointer",
+          background: "var(--kavia-orange, #E87A41)",
+          color: "#fff",
+          borderRadius: 6,
+          padding: 4,
+          fontSize: 13,
+        }}
+      >
+        <b>{session.course?.code || ""}</b> - {session.course?.name || ""}
+        <div>
+          {session.faculty?.name} | {session.room?.code}
+        </div>
+        <div style={{ fontSize: 11 }}>
+          {session.start_time} - {session.end_time}
+        </div>
+      </div>
+    );
+  }
+
+  // FORM for CREATE/EDIT Modal
+  function timetableModal() {
+    if (!modalOpen) return null;
+    return (
+      <div className="modal-backdrop" onClick={() => setModalOpen(false)}>
+        <div
+          className="modal"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "#fff",
+            padding: 24,
+            borderRadius: 8,
+            minWidth: 320,
+            maxWidth: 400,
+            position: "relative",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>
+            {modalMode === "create" ? "Add Session" : "Edit Session"}
+          </h3>
+          {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
+          <form onSubmit={handleModalSubmit}>
+            <label>
+              Day of Week
+              <select
+                value={selectedSession.day_of_week}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, day_of_week: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select Day --</option>
+                {weekdays.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Start Time
+              <select
+                value={selectedSession.start_time}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, start_time: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select Start --</option>
+                {timeslots.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              End Time
+              <select
+                value={selectedSession.end_time}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, end_time: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select End --</option>
+                {timeslots
+                  .filter(
+                    (t) => timeslots.indexOf(t) > timeslots.indexOf(selectedSession.start_time)
+                  )
+                  .map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label>
+              Course
+              <select
+                value={selectedSession.course_id}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, course_id: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select Course --</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.code}: {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Faculty
+              <select
+                value={selectedSession.faculty_id}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, faculty_id: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select Faculty --</option>
+                {faculty.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Room
+              <select
+                value={selectedSession.room_id}
+                onChange={(e) =>
+                  setSelectedSession((ss) => ({ ...ss, room_id: e.target.value }))
+                }
+                required
+                style={{ width: "100%" }}
+              >
+                <option value="">-- Select Room --</option>
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.code}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between" }}>
+              <button type="button" className="btn" onClick={() => setModalOpen(false)}>
+                Cancel
+              </button>
+              {modalMode === "edit" && (
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ background: "red" }}
+                  onClick={() => handleDelete(selectedSession.id)}
+                >
+                  Delete
+                </button>
+              )}
+              <button type="submit" className="btn btn-large" style={{ background: "var(--kavia-orange, #E87A41)" }}>
+                {modalMode === "create" ? "Add" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid CSS
+  const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: `90px repeat(${weekdays.length}, 1fr)`,
+    border: "1px solid var(--border-color, #ddd)",
+    borderRadius: "8px",
+    overflow: "hidden",
+    background: "#fff"
+  };
 
   return (
     <div>
-      <h2 className="title" style={{ marginTop: 0, marginBottom: 18 }}>
-        Timetable (Week View)
-      </h2>
-      <ul style={{ color: "var(--text-secondary)", marginBottom: 20 }}>
-        <li>
-          <b>Click</b> a cell to <b>add</b> a session.
-        </li>
-        <li>
-          <b>Click a session</b> to <b>edit</b> or <b>delete</b>.
-        </li>
-      </ul>
-      {error && (
-        <Notification type="error" message={error} onClose={() => {}} />
-      )}
-      {lookupError && (
-        <Notification type="error" message={lookupError} onClose={() => setLookupError("")} />
-      )}
-      {notification && (
-        <Notification
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
-      <div
-        style={{
-          overflowX: "auto",
-          border: "1px solid var(--border-color)",
-          background: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 2px 8px 0 rgba(46,204,64,0.04)",
-        }}
-      >
-        <table
-          style={{
-            borderCollapse: "collapse",
-            minWidth: 940,
-            width: "100%",
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={cellStyleHeader}>Time</th>
-              {WEEKDAYS.map((d) => (
-                <th style={cellStyleHeader} key={d}>
-                  {d}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {timeSlots.map((slot, i) => (
-              <tr key={slot.start}>
-                <td style={cellStyleTime}>
-                  {slot.start} - {slot.end}
-                </td>
-                {WEEKDAYS.map((day) => {
-                  const slotSessions = cellSessions(day, slot.start);
-                  // Drag & Drop events
-                  const isHoverTarget =
-                    dragDrop.dragState === "dragging" &&
-                    dragDrop.hovered &&
-                    dragDrop.hovered.day === day &&
-                    dragDrop.hovered.time === slot.start;
-
-                  return (
-                    <td
-                      key={day + slot.start}
-                      style={{
-                        ...cellStyleBody,
-                        background:
-                          isHoverTarget
-                            ? "#fffacc"
-                            : slotSessions.length === 0
-                            ? "#fafbfa"
-                            : "#e8f5e9",
-                        border: isHoverTarget
-                          ? "2px dashed #f39c12"
-                          : cellStyleBody.borderLeft,
-                        position: "relative",
-                        cursor:
-                          dragDrop.dragState === "dragging"
-                            ? "copy"
-                            : slotSessions.length === 0
-                            ? "pointer"
-                            : "default",
-                        minWidth: 140,
-                        outline:
-                          isHoverTarget && dragDrop.dragState === "dragging"
-                            ? "2px solid #f39c12"
-                            : "none",
-                        opacity:
-                          dragDrop.dragState === "dragging" &&
-                          slotSessions.length > 0
-                            ? 0.55
-                            : 1,
-                        transition: "background 0.10s, outline 0.10s",
-                      }}
-                      tabIndex={0}
-                      aria-label={
-                        slotSessions.length === 0
-                          ? `Add session, ${day} at ${slot.start}`
-                          : `Session for ${day} at ${slot.start}`
-                      }
-                      onClick={() =>
-                        slotSessions.length === 0
-                          ? handleAdd(day, slot.start)
-                          : undefined
-                      }
-                      onDragOver={e => {
-                        e.preventDefault();
-                        if (dragDrop.dragState === "dragging" && slotSessions.length === 0) {
-                          dragDrop.updateHover(day, slot.start);
-                        }
-                      }}
-                      onDragEnter={e => {
-                        e.preventDefault();
-                        if (dragDrop.dragState === "dragging" && slotSessions.length === 0) {
-                          dragDrop.updateHover(day, slot.start);
-                        }
-                      }}
-                      onDrop={e => {
-                        e.preventDefault();
-                        if (
-                          dragDrop.dragState === "dragging" &&
-                          dragDrop.draggingSession &&
-                          slotSessions.length === 0
-                        ) {
-                          dragDrop.handleDrop({ day, time: slot.start });
-                        }
-                      }}
-                      onDragLeave={e => {
-                        // Optionally clear hover state
-                      }}
-                    >
-                      {slotSessions.length === 0 ? (
-                        <span style={{ color: "#bbb" }}>+</span>
-                      ) : (
-                        slotSessions.map((s) => (
-                          <div
-                            key={s.id}
-                            style={{
-                              background: "#b3e5c7",
-                              color: "#222",
-                              borderRadius: 5,
-                              marginBottom: 7,
-                              padding: "0.3em 0.6em",
-                              fontSize: "1em",
-                              boxShadow: "0 1px 4px 0 rgba(46, 204, 64, 0.12)",
-                              cursor: "pointer",
-                              outline: "2px solid transparent",
-                              opacity:
-                                dragDrop.dragState === "dragging" &&
-                                dragDrop.draggingSession &&
-                                dragDrop.draggingSession.id === s.id
-                                  ? 0.45
-                                  : 1,
-                            }}
-                            tabIndex={0}
-                            role="button"
-                            aria-label={`Session: ${courseMap[s.course_id]?.name || "Unknown"}; Faculty: ${facultyMap[s.faculty_id]?.name || "Unknown"}; Room: ${roomMap[s.room_id]?.name || "Unknown"}; Edit`}
-                            draggable
-                            onDragStart={e => {
-                              // Start drag
-                              dragDrop.beginDrag(s, { day, time: slot.start });
-                            }}
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleEdit(s);
-                            }}
-                            onDragEnd={e => {
-                              dragDrop.endDrag();
-                            }}
-                          >
-                            <div title="Course" style={{ fontWeight: 600 }}>
-                              {courseMap[s.course_id]?.name || "(Unknown)"}{" "}
-                              <span style={{ fontSize: "0.96em", fontWeight: 400, color: "#2ecc40" }}>
-                                {courseMap[s.course_id]?.code ? `(${courseMap[s.course_id]?.code})` : ""}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: "0.95em" }}>
-                              <b>Faculty:</b> {facultyMap[s.faculty_id]?.name || "-"}
-                            </div>
-                            <div style={{ fontSize: "0.95em" }}>
-                              <b>Room:</b> {roomMap[s.room_id]?.name || "-"}
-                            </div>
-                            <div style={{ fontSize: "0.97em", color: "#222" }}>
-                              {s.start_time} - {s.end_time}
-                            </div>
-                            <div style={{ display: "flex", gap: 6, marginTop: 3 }}>
-                              <button
-                                className="btn"
-                                type="button"
-                                style={{
-                                  fontSize: "0.96em",
-                                  padding: "3px 12px",
-                                  background: "var(--primary-green)",
-                                  color: "#fff",
-                                }}
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleEdit(s);
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="btn"
-                                type="button"
-                                style={{
-                                  fontSize: "0.96em",
-                                  padding: "3px 10px",
-                                  background: "var(--notification-error)",
-                                  color: "#fff",
-                                }}
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleDelete(s);
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Entry form drawer/modal */}
-      {showForm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            zIndex: 2000,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(47, 59, 49, 0.16)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={() => {
-            setShowForm(false);
-            setEditingEntry(null);
-          }}
-        >
+      <div className="timetable-grid" style={gridStyle}>
+        {/* Header Row */}
+        <div style={{ background: "#f6f6f6", borderBottom: "1px solid #eee" }}></div>
+        {weekdays.map((day) => (
           <div
-            style={{ zIndex: 2010 }}
-            onClick={e => e.stopPropagation()}
+            key={day}
+            style={{
+              background: "#f6f6f6",
+              fontWeight: "bold",
+              borderBottom: "1px solid #eee",
+              textAlign: "center",
+              padding: "8px 0"
+            }}
           >
-            <TimetableEntryForm
-              mode={formMode}
-              entry={editingEntry}
-              onSave={handleSave}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingEntry(null);
-              }}
-              courses={courses}
-              faculty={faculty}
-              rooms={rooms}
-            />
+            {day}
           </div>
-        </div>
-      )}
-      <ConflictModal
-        open={conflictModal.open}
-        conflicts={conflictModal.conflicts}
-        canOverride={conflictModal.canOverride}
-        onClose={handleModalClose}
-        onOverride={handleOverrideProceed}
-      />
-      {loading ? (
-        <div style={{ marginTop: 18, color: "#888" }}>Loading sessions…</div>
-      ) : null}
+        ))}
+        {/* Slots */}
+        {timeslots.map((slot) => (
+          <React.Fragment key={slot}>
+            {/* Time label */}
+            <div
+              style={{
+                borderRight: "1px solid #eee",
+                fontWeight: 500,
+                background: "#f6f6f6",
+                padding: "6px 0",
+                textAlign: "center"
+              }}
+            >
+              {slot}
+            </div>
+            {weekdays.map((day) => {
+              const session = sessionForCell(day, slot);
+              return (
+                <div
+                  key={day + slot}
+                  onDoubleClick={() => handleCellDoubleClick(day, slot)}
+                  style={{
+                    minHeight: 50,
+                    borderRight:
+                      weekdays.indexOf(day) < weekdays.length - 1
+                        ? "1px solid #eee"
+                        : undefined,
+                    borderBottom:
+                      timeslots.indexOf(slot) < timeslots.length - 1
+                        ? "1px solid #eee"
+                        : undefined,
+                    background: session ? "rgba(40, 170, 100, 0.09)" : "#fff",
+                    padding: 6,
+                    cursor: session ? "pointer" : "pointer",
+                  }}
+                  title={
+                    session
+                      ? `Edit: ${session.course?.name || session.course_id}`
+                      : "Double-click to add session"
+                  }
+                >
+                  {sessionInfoBlock(session)}
+                  {!session && (
+                    <span style={{ color: "#bbb", fontSize: 11 }}>+</span>
+                  )}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+      <div style={{ marginTop: 10, fontSize: 12, color: "#777" }}>
+        <b>Instructions:</b> Double-click any cell to add a session. Click a session block to edit.
+      </div>
+      {timetableModal()}
     </div>
   );
 }
 
-// Cell styling for timetable grid
-const cellStyleHeader = {
-  padding: "10px 4px",
-  textAlign: "center",
-  background: "var(--border-color)",
-  color: "#222",
-  minWidth: 100,
-  fontWeight: 700,
-  borderBottom: "2px solid #e8f5e9",
-};
-
-const cellStyleTime = {
-  padding: "9px 4px",
-  background: "#fafafa",
-  color: "#444",
-  fontWeight: 600,
-  minWidth: 70,
-  borderRight: "1px solid #edf8ed",
-  textAlign: "right",
-};
-
-const cellStyleBody = {
-  minHeight: 46,
-  padding: "7px 4px",
-  borderLeft: "1px solid #eeeeee",
-  borderBottom: "1px solid #f5f8f5",
-  verticalAlign: "top",
-};
-
-// PUBLIC_INTERFACE: default export
 export default TimetableGrid;
