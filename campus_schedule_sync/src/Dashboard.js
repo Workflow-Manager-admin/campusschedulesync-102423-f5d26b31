@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CourseList from "./CourseList";
+import FacultyList from "./FacultyList";
 import RoomList from "./RoomList";
 import CourseAllocation from "./CourseAllocation";
 import RoomAssignment from "./RoomAssignment";

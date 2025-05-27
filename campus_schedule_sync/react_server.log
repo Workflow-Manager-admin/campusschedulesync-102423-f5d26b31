@@ -49,3 +49,25 @@ src/Dashboard.js
 Search for the keywords to learn more about each error.
 
 webpack compiled with 1 error and 1 warning
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/FacultyBulkImportExport.js
+  Line 111:22:  'r' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/App.js
+  Line 4:8:  'Notification' is defined but never used  no-unused-vars
+
+src/Notification.js
+  Line 29:49:  The ref value 'notifRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'notifRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+ERROR in [eslint] 
+src/FacultyBulkImportExport.js
+  Line 111:22:  'r' is not defined  no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error and 1 warning
