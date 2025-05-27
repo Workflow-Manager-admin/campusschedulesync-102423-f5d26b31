@@ -1,9 +1,16 @@
 :root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
+  --primary-green: #2ecc40;
+  --accent-green: #27ae60;
+  --background-white: #ffffff;
+  --text-dark: #222;
+  --text-secondary: #4D4D4D;
+  --border-color: #e8f5e9;
+  --navbar-bg: #ffffff;
+  --navbar-shadow: 0 2px 6px rgba(46, 204, 64, 0.06);
+  --notification-bg: #f8fff7;
+  --notification-success: #27ae60;
+  --notification-error: #e74c3c;
+  --notification-info: #2ecc40;
 }
 
 body {
