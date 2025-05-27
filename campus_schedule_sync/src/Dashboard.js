@@ -4,6 +4,7 @@ import FacultyList from "./FacultyList";
 import RoomList from "./RoomList";
 import CourseAllocation from "./CourseAllocation";
 import RoomAssignment from "./RoomAssignment";
+import TimetableGrid from "./TimetableGrid";
 
 /**
  * Dashboard container: hosts all major app panels (Timetable, Courses, Faculty, Rooms, Import/Export, Allocation).
@@ -27,14 +28,10 @@ const SECTIONS = [
 
 // Stub panel for each main module; to be replaced with full feature modules
 
-import TimetableGrid from "./TimetableGrid"; // Add import for TimetableGrid
-
-import TimetableGrid from "./TimetableGrid"; // Add import for TimetableGrid
-
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
-      return <TimetableGrid />; // Replace placeholder with TimetableGrid
+      return <TimetableGrid />;
     case "courses":
       return <CourseList />;
     case "faculty":
@@ -51,7 +48,6 @@ function getSectionComponent(section) {
     case "allocation":
       // Import lazy to avoid circular, but here we just inline
       // eslint-disable-next-line
-      // eslint-disable-next-line
       // Allow tab between CourseAllocation and RoomAssignment
       // No need to lazy-load.
       return <AllocationPanels />;
@@ -60,7 +56,7 @@ function getSectionComponent(section) {
   }
 }
 
- // Tabbed allocation panel for allocation section
+// Tabbed allocation panel for allocation section
 function AllocationPanels() {
   const [tab, setTab] = useState("course");
   return (
