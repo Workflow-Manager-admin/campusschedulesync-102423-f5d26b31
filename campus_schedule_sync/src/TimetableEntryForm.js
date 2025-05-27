@@ -1,230 +1,143 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 /**
- * PUBLIC_INTERFACE
- * TimetableEntryForm: Add or edit a timetable session entry.
- * 
+ * Modal form for creating/editing a timetable session.
  * Props:
- *   mode: "add"|"edit"
- *   entry: session object (for edit, else null)
- *   onSave: (fieldsObj) => Promise<boolean> (parent handles DB/optimistic state)
- *   onCancel: () => void
- *   courses: [{id, name, code}]
- *   faculty: [{id, name}]
- *   rooms: [{id, name}]
+ *   isOpen: bool, onClose: func, onSubmit: func
+ *   onDelete: func (for edit)
+ *   courses, faculty, rooms: array of selects
+ *   initialData: object for initial values
  */
-function TimetableEntryForm({
-  mode = "add",
-  entry = null,
-  onSave,
-  onCancel,
+// PUBLIC_INTERFACE
+export default function TimetableEntryForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  onDelete,
   courses = [],
   faculty = [],
   rooms = [],
+  initialData = {},
 }) {
-  // Fields
   const [form, setForm] = useState({
-    course_id: entry?.course_id || "",
-    faculty_id: entry?.faculty_id || "",
-    room_id: entry?.room_id || "",
-    day: entry?.day || "Monday",
-    start_time: entry?.start_time || "09:00",
-    end_time: entry?.end_time || "10:00",
+    course_id: "",
+    faculty_id: "",
+    room_id: "",
+    day_of_week: "",
+    start_time: "",
+    ...initialData,
   });
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (entry) {
-      setForm({
-        course_id: entry.course_id || "",
-        faculty_id: entry.faculty_id || "",
-        room_id: entry.room_id || "",
-        day: entry.day || "Monday",
-        start_time: entry.start_time || "09:00",
-        end_time: entry.end_time || "10:00",
-      });
-    }
-  }, [entry]);
+    setForm({
+      course_id: "",
+      faculty_id: "",
+      room_id: "",
+      day_of_week: "",
+      start_time: "",
+      ...initialData,
+    });
+  }, [isOpen, initialData]);
 
-  // Handle form changes
   function handleChange(e) {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  // PUBLIC_INTERFACE
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    // Validation
-    if (
-      !form.course_id ||
-      !form.faculty_id ||
-      !form.room_id ||
-      !form.day ||
-      !form.start_time ||
-      !form.end_time
-    ) {
-      setError("All fields are required.");
-      return;
-    }
-    // End time must be later than start time
-    if (form.start_time >= form.end_time) {
-      setError("End time must be after start time.");
-      return;
-    }
-
-    setSubmitting(true);
-    const result = await onSave(form);
-    setSubmitting(false);
-    if (result === false) {
-      setError("Failed to save entry. Please try again.");
-    } else {
-      onCancel(); // auto-close
-    }
+    onSubmit({
+      ...form,
+      id: initialData.id,
+      course_id: +form.course_id,
+      faculty_id: +form.faculty_id,
+      room_id: +form.room_id,
+    });
   }
+
+  if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        background: "#fafbfa",
-        border: "1px solid var(--border-color)",
-        borderRadius: 8,
-        padding: 24,
-        minWidth: 320,
-        maxWidth: 420,
-      }}
-      aria-label={mode === "add" ? "Add Session" : "Edit Session"}
-    >
-      <h3 style={{ marginTop: 0, marginBottom: 14 }}>{mode === "add" ? "Add Session" : "Edit Session"}</h3>
-      {error && (
-        <div className="notification error" style={{ margin: "10px 0" }}>
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} autoComplete="off">
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <b>Course:</b>
-            <select
-              name="course_id"
-              value={form.course_id}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            >
+    <div className="tt-modal-bk" tabIndex={-1} style={{
+      position: "fixed", zIndex: 30,
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.12)",
+      display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
+      <div className="tt-modal" style={{
+        minWidth: 380, minHeight: 240,
+        background: "#fff",
+        borderRadius: 10,
+        padding: "30px 32px 22px 32px",
+        boxShadow: "0 10px 32px rgba(40,60,100,0.15)",
+        position: "relative"
+      }}>
+        <button onClick={onClose} style={{
+          position: "absolute", top: 18, right: 20, background: "none", border: "none", fontSize: 26, cursor: "pointer"
+        }} title="Close">&times;</button>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <h3 style={{ margin: "0 0 15px 0" }}>{initialData.id ? "Edit Session" : "Add Session"}</h3>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label htmlFor="course_id">Course</label>
+            <select name="course_id" value={form.course_id} onChange={handleChange} required>
               <option value="">Select course</option>
               {courses.map((c) => (
-                <option value={c.id} key={c.id}>
-                  {c.name} ({c.code})
-                </option>
+                <option key={c.id} value={c.id}>{c.course_code}</option>
               ))}
             </select>
-          </label>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <b>Faculty:</b>
-            <select
-              name="faculty_id"
-              value={form.faculty_id}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            >
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label htmlFor="faculty_id">Faculty</label>
+            <select name="faculty_id" value={form.faculty_id} onChange={handleChange} required>
               <option value="">Select faculty</option>
               {faculty.map((f) => (
-                <option value={f.id} key={f.id}>{f.name}</option>
+                <option key={f.id} value={f.id}>{f.name}</option>
               ))}
             </select>
-          </label>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <b>Room:</b>
-            <select
-              name="room_id"
-              value={form.room_id}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            >
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label htmlFor="room_id">Room</label>
+            <select name="room_id" value={form.room_id} onChange={handleChange} required>
               <option value="">Select room</option>
               {rooms.map((r) => (
-                <option value={r.id} key={r.id}>{r.name}</option>
+                <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
-          </label>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <b>Day:</b>
-            <select
-              name="day"
-              value={form.day}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            >
-              {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((d)=>(
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div style={{ marginBottom: 12, display: "flex", gap: 12 }}>
-          <label style={{ flex: 1 }}>
-            <b>Start:</b>
-            <input
-              type="time"
-              name="start_time"
-              value={form.start_time}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </label>
-          <label style={{ flex: 1 }}>
-            <b>End:</b>
-            <input
-              type="time"
-              name="end_time"
-              value={form.end_time}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
-          </label>
-        </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-          <button className="btn" type="submit" disabled={submitting}>
-            {mode === "add" ? "Add Session" : "Save Changes"}
-          </button>
-          <button
-            className="btn"
-            type="button"
-            style={{ background: "var(--border-color)", color: "#222" }}
-            onClick={onCancel}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24 }}>
+            <div style={{ flex: 1 }}>
+              <label htmlFor="day_of_week">Day</label>
+              <select name="day_of_week" value={form.day_of_week} onChange={handleChange} required>
+                <option value="">Select day</option>
+                <option value="mon">Monday</option>
+                <option value="tue">Tuesday</option>
+                <option value="wed">Wednesday</option>
+                <option value="thu">Thursday</option>
+                <option value="fri">Friday</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label htmlFor="start_time">Time</label>
+              <select name="start_time" value={form.start_time} onChange={handleChange} required>
+                {["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map((v) =>
+                  <option key={v} value={v}>{v}</option>
+                )}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row", gap: 16, marginTop: 10 }}>
+            <button type="submit" className="btn btn-large" style={{ flex: 2, background: "#2ecc40" }}>
+              {initialData.id ? "Save" : "Add"}
+            </button>
+            {onDelete &&
+              <button type="button" onClick={onDelete} className="btn" style={{
+                background: "#ec665a",
+                color: "#fff"
+              }}>Delete</button>
+            }
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
-
-const inputStyle = {
-  display: "block",
-  padding: "8px 10px",
-  border: "1px solid var(--border-color)",
-  borderRadius: 4,
-  marginTop: 4,
-  fontSize: "1rem",
-  width: "100%",
-  background: "#fff",
-};
-
-export default TimetableEntryForm;
