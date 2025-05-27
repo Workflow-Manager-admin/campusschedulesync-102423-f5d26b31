@@ -17,11 +17,12 @@ VALUES
   (3, 'PHY301', 'Physics Basics', 'Physics');
 
 -- Faculty
-INSERT INTO faculty (id, name, department, email)
+-- Ensure unique, non-null faculty_code for every faculty row, and all NOT NULL columns populated
+INSERT INTO faculty (id, name, department, email, faculty_code)
 VALUES 
-  (1, 'Dr. Alice Smith', 'Computer Science', 'alice.smith@university.edu'),
-  (2, 'Dr. Bob Johnson', 'Mathematics', 'bob.johnson@university.edu'),
-  (3, 'Dr. Carol Lee', 'Physics', 'carol.lee@university.edu');
+  (1, 'Dr. Alice Smith', 'Computer Science', 'alice.smith@university.edu', 'FAC001'),
+  (2, 'Dr. Bob Johnson', 'Mathematics', 'bob.johnson@university.edu', 'FAC002'),
+  (3, 'Dr. Carol Lee', 'Physics', 'carol.lee@university.edu', 'FAC003');
 
 -- Timetable Entries (ensure all foreign keys are valid: room_id, course_id, faculty_id)
 INSERT INTO timetable_entries (id, course_id, faculty_id, room_id, day_of_week, start_time, end_time)
