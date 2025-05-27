@@ -22,6 +22,7 @@ const SECTIONS = [
 ];
 
 // Stub panel for each main module; to be replaced with full feature modules
+import RoomList from "./RoomList";
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
@@ -31,7 +32,7 @@ function getSectionComponent(section) {
     case "faculty":
       return <div>🧑‍🏫 <b>Faculty Directory</b> (manage teaching staff)</div>;
     case "rooms":
-      return <div>🏢 <b>Rooms/Resources</b> (room/resource management)</div>;
+      return <RoomList />;
     case "import_export":
       return (
         <div>
