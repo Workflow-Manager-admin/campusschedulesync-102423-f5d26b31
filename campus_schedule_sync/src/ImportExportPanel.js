@@ -152,14 +152,14 @@ function ImportExportPanel() {
   }
 
   // ----------------- Bulk Import for Timetable Sessions ----------------------------
-  // Template for timetable import
+  // Template for timetable_entries import (matching schema)
   const TIMETABLE_TEMPLATE_HEADER = [
-    "course_id", "faculty_id", "room_id", "day", "start_time", "end_time"
+    "course_id", "faculty_id", "room_id", "day_of_week", "start_time"
   ];
   const TIMETABLE_TEMPLATE_SAMPLE = [
-    // Example rows
-    ["1", "7", "2", "Monday", "09:00", "10:00"],
-    ["2", "8", "3", "Wednesday", "12:00", "13:00"]
+    // Example rows (note: day_of_week keys consistent with TimetableGrid, e.g. mon/tue/wed)
+    ["1", "7", "2", "mon", "09:00"],
+    ["2", "8", "3", "wed", "12:00"]
   ];
 
   function handleTimetableDownloadTemplate() {
@@ -175,10 +175,10 @@ function ImportExportPanel() {
     if (!file) return;
     readSpreadsheetFile(file, (rows, meta) => {
       try {
-        if (!rows || !rows.length || rows[0].length < 6)
+        if (!rows || !rows.length || rows[0].length < 5)
           throw new Error("Invalid header/columns.");
         const header = rows[0].map(h => h.trim().toLowerCase());
-        if (header.slice(0, 6).join(",") !== TIMETABLE_TEMPLATE_HEADER.join(",").toLowerCase()) {
+        if (header.slice(0, 5).join(",") !== TIMETABLE_TEMPLATE_HEADER.join(",").toLowerCase()) {
           throw new Error(`Header must be: ${TIMETABLE_TEMPLATE_HEADER.join(", ")}`);
         }
         const mapped = rows
@@ -188,9 +188,8 @@ function ImportExportPanel() {
             course_id: r[0]?.trim(),
             faculty_id: r[1]?.trim(),
             room_id: r[2]?.trim(),
-            day: r[3]?.trim(),
-            start_time: r[4]?.trim(),
-            end_time: r[5]?.trim(),
+            day_of_week: r[3]?.trim(),
+            start_time: r[4]?.trim()
           }));
         if (mapped.length === 0) throw new Error("No valid data rows.");
         setImportPreview({ type: "timetable", items: mapped });
