@@ -21,9 +21,9 @@ const SECTIONS = [
   { key: "allocation", label: "Allocation" },
 ];
 
+import RoomList from "./RoomList";
+
 // Stub panel for each main module; to be replaced with full feature modules
-import RoomList from "./RoomList";
-import RoomList from "./RoomList";
 
 function getSectionComponent(section) {
   switch (section) {

@@ -91,3 +91,18 @@ src/Dashboard.js
   Line 26:7:  Parsing error: Identifier 'RoomList' has already been declared. (26:7)
 
 webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/Dashboard.js
+  Line 24:1:  Import in body of module; reorder to top  import/first
+
+Search for the keywords to learn more about each error.
+ERROR in [eslint] 
+src/Dashboard.js
+  Line 24:1:  Import in body of module; reorder to top  import/first
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error
