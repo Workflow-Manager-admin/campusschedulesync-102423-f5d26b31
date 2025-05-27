@@ -23,6 +23,8 @@ const SECTIONS = [
 
 // Stub panel for each main module; to be replaced with full feature modules
 import RoomList from "./RoomList";
+import RoomList from "./RoomList";
+
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
