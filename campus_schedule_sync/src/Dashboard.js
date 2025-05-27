@@ -29,6 +29,8 @@ const SECTIONS = [
 
 import TimetableGrid from "./TimetableGrid"; // Add import for TimetableGrid
 
+import TimetableGrid from "./TimetableGrid"; // Add import for TimetableGrid
+
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
