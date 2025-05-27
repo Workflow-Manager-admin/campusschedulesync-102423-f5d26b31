@@ -31,11 +31,11 @@ const SECTIONS = [
 function getSectionComponent(section) {
   switch (section) {
     case "timetable":
+      // Renders the new TimetableGrid component
       return <TimetableGrid />;
     case "courses":
       return <CourseList />;
     case "faculty":
-      // Render the functional faculty directory
       return <FacultyList />;
     case "rooms":
       return <RoomList />;
@@ -46,10 +46,6 @@ function getSectionComponent(section) {
         </div>
       );
     case "allocation":
-      // Import lazy to avoid circular, but here we just inline
-      // eslint-disable-next-line
-      // Allow tab between CourseAllocation and RoomAssignment
-      // No need to lazy-load.
       return <AllocationPanels />;
     default:
       return null;
