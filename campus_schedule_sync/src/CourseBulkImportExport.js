@@ -11,7 +11,7 @@ import React, { useRef } from "react";
  *   - courses: array of course objects (current data)
  *   - onImport: async (parsedCourses) => void
  */
-function CourseBulkImportExport({ courses = [], onImport }) {
+function CourseBulkImportExport({ courses = [], onImport, onFeedback }) {
   const fileInput = useRef(null);
 
   // Template header
@@ -28,6 +28,7 @@ function CourseBulkImportExport({ courses = [], onImport }) {
       ...TEMPLATE_SAMPLE.map(row => row.map(field => `"${field}"`).join(",")),
     ].join("\r\n");
     triggerCSVDownload(csv, "Course_Template.csv");
+    if (onFeedback) onFeedback({ type: "info", message: "Downloaded template for courses." });
   }
 
   // CSV download of data
@@ -39,6 +40,7 @@ function CourseBulkImportExport({ courses = [], onImport }) {
       ),
     ].join("\r\n");
     triggerCSVDownload(csv, "Courses_Export.csv");
+    if (onFeedback) onFeedback({ type: "info", message: "Exported all courses." });
   }
 
   // CSV upload and parse
@@ -51,7 +53,7 @@ function CourseBulkImportExport({ courses = [], onImport }) {
       try {
         const parsed = parseCSV(text);
         if (!parsed.length || parsed[0].length < 3) {
-          alert("Invalid file: requires fields name, code, department");
+          if (onFeedback) onFeedback({ type: "error", message: "Invalid file: requires fields name, code, department" });
           return;
         }
         // Validate header
@@ -61,7 +63,7 @@ function CourseBulkImportExport({ courses = [], onImport }) {
           header[1] !== "code" ||
           header[2] !== "department"
         ) {
-          alert("CSV header must be: name, code, department");
+          if (onFeedback) onFeedback({ type: "error", message: "CSV header must be: name, code, department" });
           return;
         }
         // Remove header and map to objects
@@ -75,13 +77,13 @@ function CourseBulkImportExport({ courses = [], onImport }) {
         })).filter(c => c.name && c.code && c.department);
 
         if (mapped.length === 0) {
-          alert("No valid rows in file.");
+          if (onFeedback) onFeedback({ type: "error", message: "No valid rows in file." });
           return;
         }
         // Submit to parent
         if (onImport) onImport(mapped);
       } catch (err) {
-        alert("Could not parse file: " + err.message);
+        if (onFeedback) onFeedback({ type: "error", message: "Could not parse file: " + err.message });
       }
     };
     reader.readAsText(file);
