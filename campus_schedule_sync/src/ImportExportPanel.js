@@ -374,46 +374,7 @@ function ImportExportPanel() {
   );
 }
 
-// Helper: trigger browser CSV download
-function triggerCSVDownload(csv, filename) {
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 8000);
-}
 
-// Minimal CSV parser (handles comma, quotes, newlines)
-function parseCSV(str) {
-  const rows = [];
-  let row = [];
-  let inQuotes = false, field = "";
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    if (char === '"' && str[i + 1] === '"') {
-      field += '"';
-      i++;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      row.push(field);
-      field = "";
-    } else if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (field !== "" || row.length) row.push(field);
-      if (row.length) rows.push(row);
-      row = [];
-      field = "";
-      if (char === "\r" && str[i + 1] === "\n") i++;
-    } else {
-      field += char;
-    }
-  }
-  if (field !== "" || row.length) row.push(field);
-  if (row.length) rows.push(row);
-  return rows;
-}
 
 // TimetableGridExportOnly: lightweight grid for image export (hidden in UI)
 function TimetableGridExportOnly({ sessions }) {
